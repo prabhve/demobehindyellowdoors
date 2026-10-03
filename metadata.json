@@ -1,0 +1,6 @@
+{
+  "name": "BYD Diner | Behind Yellow Doors Diner",
+  "description": "The official modern web platform for Behind Yellow Doors Diner (BYD Diner) in Varanasi. Featuring authentic multi-cuisine menu, instant table reservations, verified reviews, and interactive photo gallery.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
