@@ -99,7 +99,16 @@ export interface KitchenOrder {
   total: number;
   status: 'received' | 'preparing' | 'served' | 'completed' | 'cancelled';
   createdAt: string;
+  branch?: string;
+  serverName?: string;
+  guestCount?: number;
+  paymentMethod?: 'cash' | 'upi' | 'card' | 'pay_later' | string;
+  paymentStatus?: 'paid' | 'unpaid' | 'pending';
+  discount?: number;
+  discountReason?: string;
 }
+
+export type Order = KitchenOrder;
 
 export interface DinerVideo {
   id: string;

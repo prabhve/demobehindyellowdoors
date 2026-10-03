@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Plus, Minus, Trash2, CheckCircle2, Clock, UtensilsCrossed, AlertCircle } from 'lucide-react';
-import { CartItem } from '../types';
+import { CartItem, KitchenOrder } from '../types';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -9,6 +9,7 @@ interface CartDrawerProps {
   onUpdateQuantity: (itemId: string, delta: number) => void;
   onRemoveItem: (itemId: string) => void;
   onClearCart: () => void;
+  onNewOrder?: (order: KitchenOrder) => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -18,6 +19,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onUpdateQuantity,
   onRemoveItem,
   onClearCart,
+  onNewOrder,
 }) => {
   const [orderType, setOrderType] = useState<'dine_in' | 'takeaway'>('dine_in');
   const [tableNumber, setTableNumber] = useState('');
@@ -78,6 +80,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       } catch (err) {
         console.error('Failed to save order to localStorage', err);
       }
+
+      onNewOrder?.(newOrder as KitchenOrder);
 
       setOrderSlip({
         id: orderId,

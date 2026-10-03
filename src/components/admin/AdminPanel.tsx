@@ -33,6 +33,8 @@ import {
   Save,
   Globe,
   Share2,
+  Printer,
+  Receipt,
 } from 'lucide-react';
 import {
   BranchInfo,
@@ -49,6 +51,7 @@ import {
 } from '../../types';
 import { BydLogo } from '../BydLogo';
 import { SafeImage } from '../SafeImage';
+import { ManualOrderModal } from './ManualOrderModal';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -123,6 +126,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const [isAddFaqOpen, setIsAddFaqOpen] = useState(false);
   const [editingFaq, setEditingFaq] = useState<FaqItem | null>(null);
+
+  // Live Kitchen Orders State & Modals
+  const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<KitchenOrder | null>(null);
+  const [orderTypeFilter, setOrderTypeFilter] = useState<'all' | 'dine_in' | 'takeaway'>('all');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'received' | 'preparing' | 'served' | 'completed' | 'cancelled'>('all');
+  const [orderBranchFilter, setOrderBranchFilter] = useState<string>('all');
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const [printingOrder, setPrintingOrder] = useState<KitchenOrder | null>(null);
 
   // Local CMS form copy for editing site content
   const [localCms, setLocalCms] = useState<SiteContent>(siteContent);
@@ -419,6 +431,74 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // ----------------------------------------------------
   // KITCHEN ORDERS ACTIONS
   // ----------------------------------------------------
+  const handleSaveOrder = (savedOrder: KitchenOrder) => {
+    if (editingOrder) {
+      onUpdateOrders((prev) =>
+        prev.map((o) => (o.id === savedOrder.id ? savedOrder : o))
+      );
+      showToast(`Order #${savedOrder.id} (${savedOrder.orderType === 'dine_in' ? savedOrder.tableNumber : 'Takeaway'}) updated.`);
+      setEditingOrder(null);
+    } else {
+      onUpdateOrders((prev) => [savedOrder, ...prev]);
+      showToast(`Order #${savedOrder.id} dispatched to Kitchen.`);
+      setIsAddOrderOpen(false);
+    }
+  };
+
+  const handleExportOrdersCSV = () => {
+    const headers = [
+      'Order ID',
+      'Type',
+      'Table',
+      'Customer',
+      'Phone',
+      'Server',
+      'Branch',
+      'Items Count',
+      'Items List',
+      'Cooking Notes',
+      'Subtotal',
+      'GST',
+      'Discount',
+      'Total',
+      'Payment Method',
+      'Payment Status',
+      'Status',
+      'Created At',
+    ];
+
+    const rows = orders.map((ord) => [
+      ord.id,
+      ord.orderType,
+      `"${ord.tableNumber || 'N/A'}"`,
+      `"${ord.customerName || 'Guest'}"`,
+      ord.customerPhone,
+      `"${ord.serverName || 'Captain'}"`,
+      ord.branch || 'sigra',
+      ord.items.reduce((s, i) => s + i.quantity, 0),
+      `"${ord.items.map((i) => `${i.quantity}x ${i.item.name}`).join('; ')}"`,
+      `"${ord.cookingNotes || ''}"`,
+      ord.subtotal,
+      ord.gst,
+      ord.discount || 0,
+      ord.total,
+      ord.paymentMethod || 'pay_later',
+      ord.paymentStatus || 'unpaid',
+      ord.status,
+      ord.createdAt,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `BYD_Kitchen_Orders_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Kitchen Orders CSV exported successfully.');
+  };
+
   const handleUpdateOrderStatus = (orderId: string, status: 'received' | 'preparing' | 'served' | 'completed' | 'cancelled') => {
     onUpdateOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status } : o))
@@ -2143,93 +2223,411 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* TAB 6: KITCHEN ORDERS */}
           {activeTab === 'orders' && (
             <div className="space-y-6 max-w-6xl">
-              <div>
-                <h2 className="text-2xl font-bold font-display text-white">Live Kitchen Order Slips (KOT)</h2>
-                <p className="text-xs text-stone-400 mt-1">
-                  Real-time ticket feed for dine-in tables and takeaway counter orders.
-                </p>
+              {/* Header & Main Actions */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-2xl font-bold font-display text-white">Live Kitchen Order Slips (KOT)</h2>
+                    <span className="bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-mono uppercase px-2 py-0.5 rounded-full">
+                      Live Kitchen Feed
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-400 mt-1">
+                    Real-time ticket feed for dine-in tables and takeaway counter orders. Create manual orders, modify active slips & print KOTs.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleExportOrdersCSV}
+                    className="px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 border border-stone-700 cursor-pointer transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Export KOT CSV</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingOrder(null);
+                      setIsAddOrderOpen(true);
+                    }}
+                    className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-bold rounded-lg flex items-center gap-1.5 cursor-pointer shadow-lg transition-transform active:scale-95"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>+ New Table / Counter Order</span>
+                  </button>
+                </div>
               </div>
 
+              {/* Quick Metrics Bar */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div className="bg-stone-900 border border-stone-800 rounded-xl p-3">
+                  <p className="text-[10px] font-mono uppercase text-stone-400">Total Slips</p>
+                  <p className="text-xl font-bold text-white mt-0.5 font-display">{orders.length}</p>
+                </div>
+                <div className="bg-stone-900 border border-stone-800 rounded-xl p-3">
+                  <p className="text-[10px] font-mono uppercase text-amber-400">In Queue (New)</p>
+                  <p className="text-xl font-bold text-amber-400 mt-0.5 font-display">
+                    {orders.filter((o) => o.status === 'received').length}
+                  </p>
+                </div>
+                <div className="bg-stone-900 border border-stone-800 rounded-xl p-3">
+                  <p className="text-[10px] font-mono uppercase text-blue-400">In Kitchen (Prep)</p>
+                  <p className="text-xl font-bold text-blue-400 mt-0.5 font-display">
+                    {orders.filter((o) => o.status === 'preparing').length}
+                  </p>
+                </div>
+                <div className="bg-stone-900 border border-stone-800 rounded-xl p-3">
+                  <p className="text-[10px] font-mono uppercase text-emerald-400">Served / Ready</p>
+                  <p className="text-xl font-bold text-emerald-400 mt-0.5 font-display">
+                    {orders.filter((o) => o.status === 'served').length}
+                  </p>
+                </div>
+                <div className="bg-stone-900 border border-stone-800 rounded-xl p-3">
+                  <p className="text-[10px] font-mono uppercase text-stone-400">Dine-In Tables</p>
+                  <p className="text-xl font-bold text-stone-200 mt-0.5 font-display">
+                    {orders.filter((o) => o.orderType === 'dine_in').length}
+                  </p>
+                </div>
+                <div className="bg-stone-900 border border-stone-800 rounded-xl p-3">
+                  <p className="text-[10px] font-mono uppercase text-amber-500">Gross Value</p>
+                  <p className="text-lg font-bold text-white mt-0.5 font-mono">
+                    ₹{orders.reduce((sum, o) => sum + (o.status !== 'cancelled' ? o.total : 0), 0)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Filters & Search Toolbar */}
+              <div className="bg-stone-900 border border-stone-800 p-3 rounded-xl flex flex-col md:flex-row gap-3 items-center justify-between">
+                <div className="relative w-full md:w-80">
+                  <Search className="w-4 h-4 text-stone-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search table, order ID, phone, customer, dish..."
+                    value={orderSearchQuery}
+                    onChange={(e) => setOrderSearchQuery(e.target.value)}
+                    className="w-full bg-stone-950 border border-stone-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto text-xs">
+                  {/* Type Filter */}
+                  <div className="flex items-center gap-1 bg-stone-950 border border-stone-800 rounded-lg p-1">
+                    <button
+                      type="button"
+                      onClick={() => setOrderTypeFilter('all')}
+                      className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
+                        orderTypeFilter === 'all' ? 'bg-stone-800 text-white font-bold' : 'text-stone-400'
+                      }`}
+                    >
+                      All Types
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOrderTypeFilter('dine_in')}
+                      className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
+                        orderTypeFilter === 'dine_in' ? 'bg-amber-400 text-stone-950 font-bold' : 'text-stone-400'
+                      }`}
+                    >
+                      🍽️ Dine-In
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOrderTypeFilter('takeaway')}
+                      className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
+                        orderTypeFilter === 'takeaway' ? 'bg-amber-400 text-stone-950 font-bold' : 'text-stone-400'
+                      }`}
+                    >
+                      🛍️ Takeaway
+                    </button>
+                  </div>
+
+                  {/* Status Filter */}
+                  <select
+                    value={orderStatusFilter}
+                    onChange={(e) => setOrderStatusFilter(e.target.value as any)}
+                    className="bg-stone-950 border border-stone-800 text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-400"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="received">Received (Queue)</option>
+                    <option value="preparing">In Kitchen (Prep)</option>
+                    <option value="served">Served / Ready</option>
+                    <option value="completed">Completed / Settled</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+
+                  {/* Branch Filter */}
+                  <select
+                    value={orderBranchFilter}
+                    onChange={(e) => setOrderBranchFilter(e.target.value)}
+                    className="bg-stone-950 border border-stone-800 text-white rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-400"
+                  >
+                    <option value="all">All Outlets</option>
+                    <option value="sigra">Sigra Branch</option>
+                    <option value="bhojuveer">Bhojuveer Branch</option>
+                    {branches
+                      .filter((b) => b.id !== 'sigra' && b.id !== 'bhojuveer')
+                      .map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Order Cards Grid */}
               {orders.length === 0 ? (
                 <div className="bg-stone-900 border border-stone-800 rounded-xl p-12 text-center text-stone-400">
-                  <ShoppingBag className="w-10 h-10 text-stone-600 mx-auto mb-3" />
-                  <p className="text-sm font-semibold text-stone-300">No active orders right now.</p>
-                  <p className="text-xs mt-1">Orders placed via the menu cart will populate here live.</p>
+                  <ShoppingBag className="w-12 h-12 text-stone-600 mx-auto mb-3" />
+                  <p className="text-base font-semibold text-stone-300">No active orders right now.</p>
+                  <p className="text-xs mt-1 text-stone-500 mb-4">
+                    Create a manual table order above or customer orders placed via the menu cart will populate here live.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingOrder(null);
+                      setIsAddOrderOpen(true);
+                    }}
+                    className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-bold rounded-lg inline-flex items-center gap-1.5 cursor-pointer shadow-md"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create First Table Order</span>
+                  </button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {orders.map((ord) => (
-                    <div
-                      key={ord.id}
-                      className="bg-stone-900 border border-stone-800 rounded-xl p-4 flex flex-col justify-between space-y-4"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between pb-2 border-b border-stone-800 mb-2">
-                          <span className="font-mono font-bold text-amber-400 text-sm">
-                            {ord.id}
-                          </span>
-                          <span className="text-[10px] font-mono text-stone-400">
-                            {new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-
-                        <div className="text-xs text-stone-300 mb-3">
-                          <p className="font-semibold text-white">
-                            {ord.orderType === 'dine_in' ? `Table: ${ord.tableNumber}` : `Takeaway: ${ord.customerName || 'Guest'}`}
-                          </p>
-                          <p className="text-stone-400 font-mono text-[11px]">Phone: {ord.customerPhone}</p>
-                          {ord.cookingNotes && (
-                            <p className="text-[11px] text-amber-300/80 italic mt-1 bg-stone-950 p-1.5 rounded border border-stone-800">
-                              Note: {ord.cookingNotes}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-1.5 text-xs text-stone-300 border-t border-stone-800 pt-2">
-                          {ord.items.map((it, idx) => (
-                            <div key={idx} className="flex justify-between">
-                              <span>
-                                {it.quantity}x {it.item.name}
+                  {orders
+                    .filter((ord) => {
+                      if (orderTypeFilter !== 'all' && ord.orderType !== orderTypeFilter) return false;
+                      if (orderStatusFilter !== 'all' && ord.status !== orderStatusFilter) return false;
+                      if (orderBranchFilter !== 'all' && (ord.branch || 'sigra') !== orderBranchFilter) return false;
+                      if (orderSearchQuery.trim()) {
+                        const q = orderSearchQuery.toLowerCase();
+                        const matchId = ord.id.toLowerCase().includes(q);
+                        const matchTable = (ord.tableNumber || '').toLowerCase().includes(q);
+                        const matchCust = (ord.customerName || '').toLowerCase().includes(q);
+                        const matchPhone = ord.customerPhone.includes(q);
+                        const matchDish = ord.items.some((i) => i.item.name.toLowerCase().includes(q));
+                        return matchId || matchTable || matchCust || matchPhone || matchDish;
+                      }
+                      return true;
+                    })
+                    .map((ord) => (
+                      <div
+                        key={ord.id}
+                        className={`bg-stone-900 border rounded-xl p-4 flex flex-col justify-between space-y-4 shadow-lg transition-all ${
+                          ord.status === 'received'
+                            ? 'border-amber-500/50 bg-amber-950/10'
+                            : ord.status === 'preparing'
+                            ? 'border-blue-500/50 bg-blue-950/10'
+                            : ord.status === 'served'
+                            ? 'border-emerald-500/50 bg-emerald-950/10'
+                            : 'border-stone-800'
+                        }`}
+                      >
+                        <div>
+                          {/* Slip Header */}
+                          <div className="flex items-center justify-between pb-2.5 border-b border-stone-800 mb-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-amber-400 text-sm">
+                                {ord.id}
                               </span>
-                              <span className="font-mono text-stone-400">₹{it.item.price * it.quantity}</span>
+                              <span
+                                className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold ${
+                                  ord.orderType === 'dine_in'
+                                    ? 'bg-amber-400 text-stone-950'
+                                    : 'bg-stone-800 text-stone-300'
+                                }`}
+                              >
+                                {ord.orderType === 'dine_in' ? `🍽️ ${ord.tableNumber || 'Table'}` : '🛍️ Takeaway'}
+                              </span>
                             </div>
-                          ))}
+
+                            <span className="text-[10px] font-mono text-stone-400 flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-stone-500" />
+                              <span>
+                                {new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </span>
+                          </div>
+
+                          {/* Guest & Server Info */}
+                          <div className="text-xs text-stone-300 mb-3 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <p className="font-bold text-white truncate">
+                                {ord.customerName || (ord.orderType === 'dine_in' ? `${ord.tableNumber} Guest` : 'Counter Guest')}
+                              </p>
+                              {ord.guestCount && ord.orderType === 'dine_in' && (
+                                <span className="text-[11px] text-stone-400 font-mono">
+                                  {ord.guestCount} Guests
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center justify-between text-[11px] text-stone-400 font-mono">
+                              <span>Phone: {ord.customerPhone}</span>
+                              {ord.serverName && <span>Server: {ord.serverName}</span>}
+                            </div>
+
+                            {/* Kitchen Cooking Notes Alert */}
+                            {ord.cookingNotes && (
+                              <div className="mt-2 text-[11px] text-amber-300 bg-stone-950 p-2 rounded-lg border border-amber-500/30 flex items-start gap-1.5">
+                                <Flame className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                                <span className="italic leading-relaxed">{ord.cookingNotes}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Order Items List */}
+                          <div className="space-y-1.5 text-xs text-stone-300 border-t border-stone-800 pt-2.5 max-h-48 overflow-y-auto pr-1">
+                            {ord.items.map((it, idx) => (
+                              <div key={idx} className="space-y-0.5">
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium text-white flex items-center gap-1.5">
+                                    <span
+                                      className={`w-1.5 h-1.5 rounded-full ${
+                                        it.item.dietary === 'veg' ? 'bg-emerald-500' : 'bg-rose-500'
+                                      }`}
+                                    />
+                                    <span>
+                                      {it.quantity}x {it.item.name}
+                                    </span>
+                                  </span>
+                                  <span className="font-mono text-stone-400 text-[11px]">
+                                    ₹{it.item.price * it.quantity}
+                                  </span>
+                                </div>
+                                {it.instructions && (
+                                  <p className="text-[10px] text-amber-300/80 italic pl-3">
+                                    ↳ {it.instructions}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Financials Breakdown */}
+                          <div className="pt-2 mt-2 border-t border-stone-800 space-y-1 text-xs">
+                            <div className="flex justify-between items-center font-bold text-white">
+                              <span>Grand Total:</span>
+                              <span className="font-mono text-amber-400 text-sm">₹{ord.total}</span>
+                            </div>
+
+                            <div className="flex items-center justify-between text-[10px] font-mono text-stone-400 pt-1">
+                              <span className="capitalize">
+                                Mode: {ord.paymentMethod ? ord.paymentMethod.replace('_', ' ') : 'Pay Later'}
+                              </span>
+                              <span
+                                className={`px-1.5 py-0.2 rounded font-bold uppercase ${
+                                  ord.paymentStatus === 'paid'
+                                    ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                                    : 'bg-amber-950 text-amber-400 border border-amber-800'
+                                }`}
+                              >
+                                {ord.paymentStatus || 'Unpaid'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="flex justify-between font-bold text-white text-xs pt-2 mt-2 border-t border-stone-800">
-                          <span>Total Amount:</span>
-                          <span className="font-mono text-amber-400">₹{ord.total}</span>
+                        {/* Actions & Status Toolbar */}
+                        <div className="pt-2.5 border-t border-stone-800 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <select
+                              value={ord.status}
+                              onChange={(e) =>
+                                handleUpdateOrderStatus(
+                                  ord.id,
+                                  e.target.value as any
+                                )
+                              }
+                              className={`text-xs rounded-lg px-2.5 py-1.5 font-bold uppercase border focus:outline-none cursor-pointer flex-1 ${
+                                ord.status === 'received'
+                                  ? 'bg-amber-950 text-amber-400 border-amber-800'
+                                  : ord.status === 'preparing'
+                                  ? 'bg-blue-950 text-blue-300 border-blue-800'
+                                  : ord.status === 'served'
+                                  ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
+                                  : ord.status === 'completed'
+                                  ? 'bg-stone-950 text-stone-300 border-stone-800'
+                                  : 'bg-red-950 text-red-400 border-red-800'
+                              }`}
+                            >
+                              <option value="received">🟡 Received (Queue)</option>
+                              <option value="preparing">🔵 In Kitchen (Prep)</option>
+                              <option value="served">🟢 Served / Ready</option>
+                              <option value="completed">⚪ Completed / Settled</option>
+                              <option value="cancelled">🔴 Cancelled</option>
+                            </select>
+
+                            <button
+                              type="button"
+                              onClick={() => setPrintingOrder(ord)}
+                              className="p-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg transition-colors cursor-pointer"
+                              title="Print KOT Slip"
+                            >
+                              <Printer className="w-4 h-4" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingOrder(ord);
+                                setIsAddOrderOpen(false);
+                              }}
+                              className="p-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg transition-colors cursor-pointer"
+                              title="Edit Table Order Slip (Add/Modify items)"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteOrder(ord.id)}
+                              className="p-1.5 bg-stone-800 hover:bg-red-950 text-stone-400 hover:text-red-400 rounded-lg transition-colors cursor-pointer"
+                              title="Delete KOT Slip"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Quick progression shortcuts */}
+                          <div className="flex gap-1.5 pt-0.5">
+                            {ord.status === 'received' && (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateOrderStatus(ord.id, 'preparing')}
+                                className="w-full py-1 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold rounded transition-colors cursor-pointer"
+                              >
+                                ▶ Start Prep in Kitchen
+                              </button>
+                            )}
+                            {ord.status === 'preparing' && (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateOrderStatus(ord.id, 'served')}
+                                className="w-full py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold rounded transition-colors cursor-pointer"
+                              >
+                                ✓ Mark Dishes Served
+                              </button>
+                            )}
+                            {ord.status === 'served' && (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateOrderStatus(ord.id, 'completed')}
+                                className="w-full py-1 bg-stone-800 hover:bg-stone-700 text-amber-300 text-[11px] font-bold rounded transition-colors cursor-pointer"
+                              >
+                                ★ Complete Bill & Free Table
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-
-                      <div className="pt-2 flex items-center justify-between gap-2 border-t border-stone-800">
-                        <select
-                          value={ord.status}
-                          onChange={(e) =>
-                            handleUpdateOrderStatus(
-                              ord.id,
-                              e.target.value as any
-                            )
-                          }
-                          className="bg-stone-950 border border-stone-700 text-xs rounded px-2 py-1 text-white font-medium focus:outline-none"
-                        >
-                          <option value="received">Received</option>
-                          <option value="preparing">In Kitchen</option>
-                          <option value="served">Served / Ready</option>
-                          <option value="completed">Completed</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-
-                        <button
-                          onClick={() => handleDeleteOrder(ord.id)}
-                          className="p-1 text-stone-500 hover:text-red-400"
-                          title="Remove slip"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </div>
@@ -2543,6 +2941,128 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           }}
           onSave={handleSaveFaq}
         />
+      )}
+
+      {/* MANUAL TABLE & KITCHEN ORDER MODAL */}
+      {(isAddOrderOpen || editingOrder) && (
+        <ManualOrderModal
+          order={editingOrder}
+          menuItems={menuItems}
+          branches={branches}
+          onClose={() => {
+            setIsAddOrderOpen(false);
+            setEditingOrder(null);
+          }}
+          onSave={handleSaveOrder}
+        />
+      )}
+
+      {/* THERMAL KOT SLIP QUICK PRINT DIALOG */}
+      {printingOrder && (
+        <div className="fixed inset-0 z-60 bg-stone-950/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-stone-900 border border-stone-800 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                <Printer className="w-4 h-4 text-amber-400" />
+                <span>Thermal KOT Slip · {printingOrder.id}</span>
+              </h3>
+              <button
+                onClick={() => setPrintingOrder(null)}
+                className="p-1 text-stone-400 hover:text-white rounded"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Thermal Slip Content */}
+            <div className="bg-white text-stone-900 p-4 rounded-lg font-mono text-xs space-y-2.5 shadow-inner">
+              <div className="text-center border-b border-dashed border-stone-400 pb-2">
+                <h4 className="font-bold text-sm tracking-wider uppercase">BEHIND YELLOW DOORS</h4>
+                <p className="text-[10px] text-stone-600 font-sans">Varanasi Flagship KOT</p>
+                <p className="text-[10px] text-stone-500">{new Date(printingOrder.createdAt).toLocaleString()}</p>
+              </div>
+
+              <div className="flex justify-between font-bold text-[11px] border-b border-dashed border-stone-400 pb-2">
+                <span>{printingOrder.orderType === 'dine_in' ? `TABLE: ${printingOrder.tableNumber || 'Table'}` : 'TAKEAWAY PARCEL'}</span>
+                <span>#{printingOrder.id}</span>
+              </div>
+
+              <div className="text-[10px] text-stone-600 space-y-0.5">
+                <p>Guest: {printingOrder.customerName || 'Walk-in'} ({printingOrder.customerPhone})</p>
+                {printingOrder.serverName && <p>Server: {printingOrder.serverName}</p>}
+                {printingOrder.guestCount && <p>Party Size: {printingOrder.guestCount} Guests</p>}
+              </div>
+
+              <div className="border-t border-b border-stone-400 py-2 space-y-1">
+                {printingOrder.items.map((it, idx) => (
+                  <div key={idx} className="space-y-0.5">
+                    <div className="flex justify-between font-semibold">
+                      <span>{it.quantity}x {it.item.name}</span>
+                      <span>₹{it.item.price * it.quantity}</span>
+                    </div>
+                    {it.instructions && (
+                      <p className="text-[9px] text-amber-800 font-sans italic pl-2">
+                        ↳ {it.instructions}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {printingOrder.cookingNotes && (
+                <div className="bg-stone-100 p-2 rounded text-[10px] border border-stone-300">
+                  <span className="font-bold">NOTE: </span>
+                  <span>{printingOrder.cookingNotes}</span>
+                </div>
+              )}
+
+              <div className="border-t border-dashed border-stone-400 pt-2 space-y-1 text-[11px]">
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span>₹{printingOrder.subtotal}</span>
+                </div>
+                {printingOrder.discount && printingOrder.discount > 0 && (
+                  <div className="flex justify-between text-emerald-700">
+                    <span>Discount:</span>
+                    <span>-₹{printingOrder.discount}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span>GST (5%):</span>
+                  <span>₹{printingOrder.gst}</span>
+                </div>
+                <div className="flex justify-between font-bold text-sm pt-1 border-t border-stone-300">
+                  <span>TOTAL:</span>
+                  <span>₹{printingOrder.total}</span>
+                </div>
+                <div className="flex justify-between text-[10px] text-stone-500 pt-1">
+                  <span>Mode: {printingOrder.paymentMethod ? printingOrder.paymentMethod.toUpperCase() : 'PAY LATER'}</span>
+                  <span>State: {printingOrder.paymentStatus ? printingOrder.paymentStatus.toUpperCase() : 'UNPAID'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPrintingOrder(null)}
+                className="flex-1 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-semibold rounded-lg"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  window.print();
+                }}
+                className="flex-1 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Thermal Slip</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

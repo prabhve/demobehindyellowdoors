@@ -473,6 +473,7 @@ export default function App() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
         onClearCart={handleClearCart}
+        onNewOrder={(newOrder) => setOrders((prev) => [newOrder, ...prev])}
       />
 
       {/* Branches & Directions Modal */}
