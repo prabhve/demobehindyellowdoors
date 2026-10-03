@@ -1,17 +1,20 @@
 import React from 'react';
 import { X, MapPin, Phone, Clock, ExternalLink, Navigation } from 'lucide-react';
 import { BRANCHES } from '../data/restaurantData';
+import { BranchInfo } from '../types';
 
 interface BranchesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectBranchForBooking: (branchId: 'sigra' | 'bhojuveer') => void;
+  onSelectBranchForBooking: (branchId: 'sigra' | 'bhojuveer' | string) => void;
+  branches?: BranchInfo[];
 }
 
 export const BranchesModal: React.FC<BranchesModalProps> = ({
   isOpen,
   onClose,
   onSelectBranchForBooking,
+  branches = BRANCHES,
 }) => {
   if (!isOpen) return null;
 
@@ -38,7 +41,7 @@ export const BranchesModal: React.FC<BranchesModalProps> = ({
         </div>
 
         <div className="space-y-6">
-          {BRANCHES.map((branch) => (
+          {branches.map((branch) => (
             <div
               key={branch.id}
               className="bg-stone-50 border border-stone-200 rounded-xl p-5 sm:p-6 space-y-4 hover:border-amber-400/80 transition-colors"

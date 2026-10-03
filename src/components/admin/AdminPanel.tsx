@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   LayoutDashboard,
   Calendar,
@@ -26,8 +26,27 @@ import {
   Flame,
   ChevronRight,
   Filter,
+  Film,
+  FileText,
+  HelpCircle,
+  Play,
+  Save,
+  Globe,
+  Share2,
 } from 'lucide-react';
-import { BranchInfo, CuisineCategory, DietaryType, GalleryPhoto, KitchenOrder, MenuItem, Reservation, Review } from '../../types';
+import {
+  BranchInfo,
+  CuisineCategory,
+  DietaryType,
+  DinerVideo,
+  FaqItem,
+  GalleryPhoto,
+  KitchenOrder,
+  MenuItem,
+  Reservation,
+  Review,
+  SiteContent,
+} from '../../types';
 import { BydLogo } from '../BydLogo';
 import { SafeImage } from '../SafeImage';
 
@@ -47,10 +66,22 @@ interface AdminPanelProps {
   onUpdateBranches: (updater: (prev: BranchInfo[]) => BranchInfo[]) => void;
   orders: KitchenOrder[];
   onUpdateOrders: (updater: (prev: KitchenOrder[]) => KitchenOrder[]) => void;
+  siteContent: SiteContent;
+  onUpdateSiteContent: (updater: (prev: SiteContent) => SiteContent) => void;
   onResetToDefaults: () => void;
 }
 
-type AdminTab = 'dashboard' | 'reservations' | 'menu' | 'gallery' | 'reviews' | 'orders' | 'branches';
+type AdminTab =
+  | 'dashboard'
+  | 'reservations'
+  | 'menu'
+  | 'gallery'
+  | 'videos'
+  | 'cms'
+  | 'faqs'
+  | 'reviews'
+  | 'orders'
+  | 'branches';
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({
   isOpen,
@@ -67,12 +98,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onUpdateBranches,
   orders,
   onUpdateOrders,
+  siteContent,
+  onUpdateSiteContent,
   onResetToDefaults,
 }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [selectedBranchFilter, setSelectedBranchFilter] = useState<'all' | 'sigra' | 'bhojuveer'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Modals for CRUD operations
   const [isAddReservationOpen, setIsAddReservationOpen] = useState(false);
@@ -84,12 +118,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [isAddPhotoOpen, setIsAddPhotoOpen] = useState(false);
   const [editingPhoto, setEditingPhoto] = useState<GalleryPhoto | null>(null);
 
+  const [isAddVideoOpen, setIsAddVideoOpen] = useState(false);
+  const [editingVideo, setEditingVideo] = useState<DinerVideo | null>(null);
+
+  const [isAddFaqOpen, setIsAddFaqOpen] = useState(false);
+  const [editingFaq, setEditingFaq] = useState<FaqItem | null>(null);
+
+  // Local CMS form copy for editing site content
+  const [localCms, setLocalCms] = useState<SiteContent>(siteContent);
+
+  // Keep local CMS form in sync when siteContent changes (or resets)
+  useEffect(() => {
+    setLocalCms(siteContent);
+  }, [siteContent]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Preset food images for easy 1-click addition
   const presetFoodImages = [
     'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80',
@@ -97,6 +144,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1584208632869-05fa2b2a5971?auto=format&fit=crop&w=800&q=80',
+  ];
+
+  const presetAmbianceImages = [
+    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=80',
+  ];
+
+  const presetMomentsImages = [
+    'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80',
+  ];
+
+  const presetHeroMedia = [
+    {
+      label: 'Warm Diner Interior (Photo)',
+      type: 'image' as const,
+      url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      label: 'Wood-Fired Pizza Sourdough (Video Loop)',
+      type: 'video' as const,
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-chef-kneading-dough-42416-large.mp4',
+    },
+    {
+      label: 'Sizzling Chocolate Brownie (Video Loop)',
+      type: 'video' as const,
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-pouring-chocolate-sauce-on-ice-cream-41589-large.mp4',
+    },
+    {
+      label: 'Evening Candlelight Booths (Photo)',
+      type: 'image' as const,
+      url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
+    },
   ];
 
   // Overview metrics
@@ -113,6 +196,101 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   }, [orders]);
 
   if (!isOpen) return null;
+
+  // ----------------------------------------------------
+  // CMS CONTENT ACTIONS
+  // ----------------------------------------------------
+  const handleSaveCmsContent = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdateSiteContent(() => localCms);
+    showToast('A to Z Site Content updated and published live!');
+  };
+
+  // ----------------------------------------------------
+  // VIDEO CRUD
+  // ----------------------------------------------------
+  const handleSaveVideo = (vid: DinerVideo) => {
+    if (editingVideo) {
+      onUpdateSiteContent((prev) => ({
+        ...prev,
+        videos: prev.videos.map((v) => (v.id === vid.id ? vid : v)),
+      }));
+      setLocalCms((prev) => ({
+        ...prev,
+        videos: prev.videos.map((v) => (v.id === vid.id ? vid : v)),
+      }));
+      showToast(`Video "${vid.title}" updated.`);
+      setEditingVideo(null);
+    } else {
+      onUpdateSiteContent((prev) => ({
+        ...prev,
+        videos: [vid, ...prev.videos],
+      }));
+      setLocalCms((prev) => ({
+        ...prev,
+        videos: [vid, ...prev.videos],
+      }));
+      showToast(`New video "${vid.title}" published.`);
+      setIsAddVideoOpen(false);
+    }
+  };
+
+  const handleDeleteVideo = (id: string) => {
+    if (window.confirm('Delete this video from the cinema section?')) {
+      onUpdateSiteContent((prev) => ({
+        ...prev,
+        videos: prev.videos.filter((v) => v.id !== id),
+      }));
+      setLocalCms((prev) => ({
+        ...prev,
+        videos: prev.videos.filter((v) => v.id !== id),
+      }));
+      showToast('Video deleted.');
+    }
+  };
+
+  // ----------------------------------------------------
+  // FAQ CRUD
+  // ----------------------------------------------------
+  const handleSaveFaq = (faq: FaqItem) => {
+    if (editingFaq) {
+      onUpdateSiteContent((prev) => ({
+        ...prev,
+        faqs: prev.faqs.map((f) => (f.id === faq.id ? faq : f)),
+      }));
+      setLocalCms((prev) => ({
+        ...prev,
+        faqs: prev.faqs.map((f) => (f.id === faq.id ? faq : f)),
+      }));
+      showToast('FAQ item updated.');
+      setEditingFaq(null);
+    } else {
+      onUpdateSiteContent((prev) => ({
+        ...prev,
+        faqs: [...prev.faqs, faq],
+      }));
+      setLocalCms((prev) => ({
+        ...prev,
+        faqs: [...prev.faqs, faq],
+      }));
+      showToast('New FAQ item published.');
+      setIsAddFaqOpen(false);
+    }
+  };
+
+  const handleDeleteFaq = (id: string) => {
+    if (window.confirm('Delete this FAQ entry?')) {
+      onUpdateSiteContent((prev) => ({
+        ...prev,
+        faqs: prev.faqs.filter((f) => f.id !== id),
+      }));
+      setLocalCms((prev) => ({
+        ...prev,
+        faqs: prev.faqs.filter((f) => f.id !== id),
+      }));
+      showToast('FAQ deleted.');
+    }
+  };
 
   // ----------------------------------------------------
   // RESERVATION ACTIONS
@@ -259,10 +437,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const navTabs = [
     { id: 'dashboard', label: 'Dashboard Overview', icon: LayoutDashboard },
     { id: 'reservations', label: 'Table Reservations', icon: Calendar, badge: reservations.length },
-    { id: 'menu', label: 'Menu & Dishes', icon: UtensilsCrossed, badge: menuItems.length },
-    { id: 'gallery', label: 'Photo Gallery', icon: ImageIcon, badge: galleryPhotos.length },
+    { id: 'menu', label: 'Menu & Dishes (CRUD)', icon: UtensilsCrossed, badge: menuItems.length },
+    { id: 'cms', label: 'Site Content (A to Z CMS)', icon: FileText, badgeColor: 'bg-amber-500' },
+    { id: 'gallery', label: 'Photo Gallery CMS', icon: ImageIcon, badge: galleryPhotos.length },
+    { id: 'videos', label: 'Videos & Cinema Reels', icon: Film, badge: siteContent.videos.length },
+    { id: 'faqs', label: 'FAQs Manager', icon: HelpCircle, badge: siteContent.faqs.length },
     { id: 'reviews', label: 'Reviews Moderation', icon: MessageSquare, badge: pendingReviewsCount > 0 ? pendingReviewsCount : undefined, badgeColor: 'bg-amber-500' },
-    { id: 'orders', label: 'Live Kitchen Orders', icon: ShoppingBag, badge: liveOrdersCount > 0 ? liveOrdersCount : undefined, badgeColor: 'bg-emerald-500' },
+    { id: 'orders', label: 'Live Kitchen Orders (KOT)', icon: ShoppingBag, badge: liveOrdersCount > 0 ? liveOrdersCount : undefined, badgeColor: 'bg-emerald-500' },
     { id: 'branches', label: 'Outlets & Settings', icon: Store },
   ];
 
@@ -282,17 +463,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           <BydLogo variant="mark" size="sm" />
           <div>
             <h1 className="font-display font-bold text-sm sm:text-base text-white tracking-tight flex items-center gap-2">
-              Behind Yellow Doors <span className="text-amber-400 font-mono text-xs uppercase px-2 py-0.5 bg-amber-950/80 rounded border border-amber-600/40">Admin Suite</span>
+              Behind Yellow Doors <span className="text-amber-400 font-mono text-xs uppercase px-2 py-0.5 bg-amber-950/80 rounded border border-amber-600/40">Full Admin & CMS Suite</span>
             </h1>
             <p className="text-[10px] text-stone-400 font-mono hidden sm:block">
-              Varanasi Flagship Management Console · Sigra & Bhojuveer
+              Varanasi Flagship Management Console · Content, Media, Bookings & Operations
             </p>
           </div>
         </div>
 
         {/* Top Controls */}
-        <div className="flex items-center gap-3">
-          {/* Branch Filter dropdown */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile Features Trigger Button */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            className="md:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-bold transition-colors cursor-pointer shadow-xs"
+            title="Toggle Features Menu"
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            <span className="capitalize">{activeTab}</span>
+          </button>
+
           <div className="hidden md:flex items-center gap-1.5 bg-stone-800 border border-stone-700 rounded-lg px-2.5 py-1 text-xs">
             <Store className="w-3.5 h-3.5 text-amber-400" />
             <span className="text-stone-400 text-[11px]">Outlet:</span>
@@ -327,12 +517,35 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       </header>
 
       {/* FULLSCREEN MAIN LAYOUT: LEFT SIDEBAR + RIGHT CONTENT */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* LEFT SIDEBAR (Features navigation) */}
-        <aside className="w-64 bg-stone-900/90 border-r border-stone-800 flex flex-col justify-between shrink-0 p-3 sm:p-4 overflow-y-auto">
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Backdrop */}
+        {isMobileSidebarOpen && (
+          <div
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="fixed inset-0 top-14 bg-black/75 z-40 md:hidden backdrop-blur-xs transition-opacity"
+          />
+        )}
+
+        {/* LEFT SIDEBAR (Desktop fixed left, Mobile slide-in drawer) */}
+        <aside
+          className={`
+            ${
+              isMobileSidebarOpen
+                ? 'fixed inset-y-14 left-0 z-50 w-72 bg-stone-900 border-r border-stone-800 shadow-2xl flex flex-col justify-between p-4 overflow-y-auto animate-in slide-in-from-left duration-200'
+                : 'hidden'
+            }
+            md:flex md:w-64 md:relative md:inset-auto bg-stone-900/90 border-r border-stone-800 flex-col justify-between shrink-0 p-3 sm:p-4 overflow-y-auto
+          `}
+        >
           <div className="space-y-1">
-            <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-stone-400 font-mono">
-              Management Controls
+            <div className="flex items-center justify-between px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-stone-400 font-mono">
+              <span>A to Z Controls</span>
+              <button
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="md:hidden text-stone-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             <nav className="space-y-1">
@@ -345,6 +558,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     onClick={() => {
                       setActiveTab(tab.id as AdminTab);
                       setSearchQuery('');
+                      setIsMobileSidebarOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                       isActive
@@ -390,9 +604,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
             <button
               onClick={() => {
-                if (window.confirm('Reset all demo data (Menu, Bookings, Reviews, Gallery) back to default?')) {
+                if (window.confirm('Reset all demo data (Menu, Bookings, Reviews, Gallery, Videos, CMS) back to defaults?')) {
                   onResetToDefaults();
-                  showToast('Database reset to defaults.');
+                  showToast('Database & CMS reset to defaults.');
+                  setIsMobileSidebarOpen(false);
                 }
               }}
               className="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-[11px] text-stone-400 hover:text-amber-400 hover:bg-stone-800/80 rounded-lg transition-colors cursor-pointer border border-stone-800"
@@ -403,13 +618,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
         </aside>
 
-        {/* RIGHT CONTENT AREA */}
-        <main className="flex-1 bg-stone-950 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        {/* RIGHT CONTENT WRAPPER */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Mobile Quick Tab Carousel Bar */}
+          <div className="md:hidden bg-stone-900 border-b border-stone-800 px-3 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
+            {navTabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id as AdminTab);
+                    setSearchQuery('');
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                    isActive
+                      ? 'bg-amber-400 text-stone-950 font-bold'
+                      : 'bg-stone-800/80 text-stone-300 hover:text-white'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                  <span>{tab.label.split(' ')[0]}</span>
+                  {tab.badge !== undefined && (
+                    <span className="text-[9px] font-mono px-1 rounded-full bg-stone-950 text-amber-400">
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* MAIN CONTENT AREA */}
+          <main className="flex-1 bg-stone-950 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {/* TAB 1: DASHBOARD OVERVIEW */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6 max-w-6xl">
               <div>
-                <h2 className="text-2xl font-bold font-display text-white">Manager Dashboard</h2>
+                <h2 className="text-2xl font-bold font-display text-white">Manager Dashboard & CMS Hub</h2>
                 <p className="text-xs text-stone-400 mt-1">
                   Live operational overview for Behind Yellow Doors Sigra & Bhojuveer branches.
                 </p>
@@ -430,7 +677,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                   <button
                     onClick={() => setActiveTab('reservations')}
-                    className="text-[11px] text-amber-400 hover:underline mt-3 text-left flex items-center gap-1"
+                    className="text-[11px] text-amber-400 hover:underline mt-3 text-left flex items-center gap-1 cursor-pointer"
                   >
                     <span>Manage all bookings</span>
                     <ChevronRight className="w-3 h-3" />
@@ -450,7 +697,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                   <button
                     onClick={() => setActiveTab('orders')}
-                    className="text-[11px] text-amber-400 hover:underline mt-3 text-left flex items-center gap-1"
+                    className="text-[11px] text-amber-400 hover:underline mt-3 text-left flex items-center gap-1 cursor-pointer"
                   >
                     <span>View kitchen order slips</span>
                     <ChevronRight className="w-3 h-3" />
@@ -470,7 +717,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                   <button
                     onClick={() => setActiveTab('menu')}
-                    className="text-[11px] text-amber-400 hover:underline mt-3 text-left flex items-center gap-1"
+                    className="text-[11px] text-amber-400 hover:underline mt-3 text-left flex items-center gap-1 cursor-pointer"
                   >
                     <span>Edit dishes & pricing</span>
                     <ChevronRight className="w-3 h-3" />
@@ -479,22 +726,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 flex flex-col justify-between">
                   <div className="flex items-center justify-between text-stone-400 mb-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider">Reviews Queue</span>
-                    <MessageSquare className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Media & Content</span>
+                    <FileText className="w-4 h-4 text-amber-400" />
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-display font-bold text-white tabular-nums">
-                      {pendingReviewsCount}
+                      {galleryPhotos.length + siteContent.videos.length}
                     </span>
-                    <span className={`text-xs font-mono ${pendingReviewsCount > 0 ? 'text-amber-400' : 'text-stone-400'}`}>
-                      {pendingReviewsCount > 0 ? 'Needs approval' : 'All clear'}
-                    </span>
+                    <span className="text-xs text-stone-400 font-mono">Photos & Videos</span>
                   </div>
                   <button
-                    onClick={() => setActiveTab('reviews')}
-                    className="text-[11px] text-amber-400 hover:underline mt-3 text-left flex items-center gap-1"
+                    onClick={() => setActiveTab('cms')}
+                    className="text-[11px] text-amber-400 hover:underline mt-3 text-left flex items-center gap-1 cursor-pointer"
                   >
-                    <span>Review moderation center</span>
+                    <span>Edit A to Z site content</span>
                     <ChevronRight className="w-3 h-3" />
                   </button>
                 </div>
@@ -502,7 +747,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
               {/* Quick Actions & Recent Bookings Split */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Recent Bookings Feed */}
                 <div className="lg:col-span-8 bg-stone-900 border border-stone-800 rounded-xl p-5">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-sm text-white flex items-center gap-2">
@@ -511,7 +755,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </h3>
                     <button
                       onClick={() => setActiveTab('reservations')}
-                      className="text-xs text-amber-400 hover:underline"
+                      className="text-xs text-amber-400 hover:underline cursor-pointer"
                     >
                       View All ({reservations.length})
                     </button>
@@ -565,10 +809,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   )}
                 </div>
 
-                {/* Quick Action Buttons */}
                 <div className="lg:col-span-4 space-y-4">
                   <div className="bg-stone-900 border border-stone-800 rounded-xl p-5 space-y-3">
-                    <h3 className="font-bold text-sm text-white">Quick Tasks</h3>
+                    <h3 className="font-bold text-sm text-white">Management Shortcuts</h3>
 
                     <button
                       onClick={() => setIsAddDishOpen(true)}
@@ -579,11 +822,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </button>
 
                     <button
-                      onClick={() => setIsAddReservationOpen(true)}
+                      onClick={() => setActiveTab('cms')}
                       className="w-full py-2.5 px-3 bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold text-xs rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors border border-stone-700"
                     >
-                      <Calendar className="w-4 h-4 text-amber-400" />
-                      <span>Manual Table Booking</span>
+                      <FileText className="w-4 h-4 text-amber-400" />
+                      <span>Edit Website Titles & Content</span>
+                    </button>
+
+                    <button
+                      onClick={() => setIsAddVideoOpen(true)}
+                      className="w-full py-2.5 px-3 bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold text-xs rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors border border-stone-700"
+                    >
+                      <Film className="w-4 h-4 text-amber-400" />
+                      <span>Upload / Embed New Video</span>
                     </button>
 
                     <button
@@ -593,16 +844,865 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       <Upload className="w-4 h-4 text-amber-400" />
                       <span>Upload Gallery Photo</span>
                     </button>
-
-                    <button
-                      onClick={handleExportReservationsCSV}
-                      className="w-full py-2.5 px-3 bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold text-xs rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors border border-stone-700"
-                    >
-                      <Download className="w-4 h-4 text-emerald-400" />
-                      <span>Export Bookings CSV</span>
-                    </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: SITE CONTENT CMS (A TO Z EDITING) */}
+          {activeTab === 'cms' && (
+            <div className="space-y-6 max-w-5xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-display text-white">A to Z Website Content CMS</h2>
+                  <p className="text-xs text-stone-400 mt-1">
+                    Edit hero headlines, subtitles, announcement banners, story pillars, and media live on the site.
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleSaveCmsContent}
+                  className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-bold uppercase tracking-wider rounded-lg flex items-center gap-2 cursor-pointer shadow-md self-start sm:self-auto"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Save All Changes Live</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveCmsContent} className="space-y-8">
+                {/* 1. TOP ANNOUNCEMENT BANNER */}
+                <div className="bg-stone-900 border border-stone-800 rounded-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-stone-800">
+                    <div>
+                      <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-400" />
+                        <span>Top Announcement Banner</span>
+                      </h3>
+                      <p className="text-[11px] text-stone-400">Notice bar displayed at the very top of the website.</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-semibold text-stone-300 cursor-pointer">
+                        {localCms.announcement.enabled ? 'Active / Visible' : 'Hidden'}
+                      </label>
+                      <input
+                        type="checkbox"
+                        checked={localCms.announcement.enabled}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            announcement: { ...localCms.announcement, enabled: e.target.checked },
+                          })
+                        }
+                        className="w-4 h-4 rounded text-amber-500 bg-stone-950 border-stone-700 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Badge Tag</label>
+                      <input
+                        type="text"
+                        value={localCms.announcement.badge}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            announcement: { ...localCms.announcement, badge: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Action Button Text</label>
+                      <input
+                        type="text"
+                        value={localCms.announcement.linkText || ''}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            announcement: { ...localCms.announcement, linkText: e.target.value },
+                          })
+                        }
+                        placeholder="e.g. Book a Table"
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Action Target / Anchor</label>
+                      <input
+                        type="text"
+                        value={localCms.announcement.linkUrl || ''}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            announcement: { ...localCms.announcement, linkUrl: e.target.value },
+                          })
+                        }
+                        placeholder="e.g. #reservations"
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+                      />
+                    </div>
+                    <div className="sm:col-span-2 lg:col-span-4">
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Announcement Message</label>
+                      <input
+                        type="text"
+                        value={localCms.announcement.text}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            announcement: { ...localCms.announcement, text: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. HERO SECTION CMS */}
+                <div className="bg-stone-900 border border-stone-800 rounded-xl p-5 space-y-4">
+                  <div className="pb-3 border-b border-stone-800">
+                    <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                      <LayoutDashboard className="w-4 h-4 text-amber-400" />
+                      <span>Hero Section Content (A to Z)</span>
+                    </h3>
+                    <p className="text-[11px] text-stone-400">Headlines, subtitles, atmosphere overlay, badge, and hero media.</p>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Editorial Top Kicker</label>
+                      <input
+                        type="text"
+                        value={localCms.hero.kicker}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            hero: { ...localCms.hero, kicker: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Headline Part 1</label>
+                        <input
+                          type="text"
+                          value={localCms.hero.headlinePart1}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              hero: { ...localCms.hero, headlinePart1: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-display"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Headline Highlight (Yellow Italic)</label>
+                        <input
+                          type="text"
+                          value={localCms.hero.headlineHighlight}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              hero: { ...localCms.hero, headlineHighlight: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-amber-400 font-display"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Hero Subtitle Paragraph</label>
+                      <textarea
+                        rows={3}
+                        value={localCms.hero.subtitle}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            hero: { ...localCms.hero, subtitle: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                      />
+                    </div>
+
+                    {/* Media Type & URL */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Hero Media Type</label>
+                        <select
+                          value={localCms.hero.mediaType}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              hero: { ...localCms.hero, mediaType: e.target.value as 'image' | 'video' },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+                        >
+                          <option value="image">Photo Image</option>
+                          <option value="video">Autoplay Video Loop</option>
+                        </select>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Media URL (Image or MP4 Video)</label>
+                        <input
+                          type="url"
+                          value={localCms.hero.mediaUrl}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              hero: { ...localCms.hero, mediaUrl: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Hero Media Quick Presets */}
+                    <div>
+                      <span className="text-[10px] text-stone-400 block mb-1.5">Quick Choose Hero Visual Preset:</span>
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {presetHeroMedia.map((hm, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() =>
+                              setLocalCms({
+                                ...localCms,
+                                hero: {
+                                  ...localCms.hero,
+                                  mediaType: hm.type,
+                                  mediaUrl: hm.url,
+                                },
+                              })
+                            }
+                            className={`px-3 py-1.5 text-[11px] rounded-lg border whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
+                              localCms.hero.mediaUrl === hm.url
+                                ? 'bg-amber-400 text-stone-950 font-bold border-amber-300'
+                                : 'bg-stone-950 text-stone-300 border-stone-800 hover:border-stone-700'
+                            }`}
+                          >
+                            {hm.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Atmosphere Overlay Details */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-stone-800">
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Atmosphere Card Title</label>
+                        <input
+                          type="text"
+                          value={localCms.hero.atmosphereTitle || ''}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              hero: { ...localCms.hero, atmosphereTitle: e.target.value },
+                            })
+                          }
+                          placeholder="Warm light. Acoustic warmth. Exceptional food."
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Atmosphere Card Subtitle</label>
+                        <input
+                          type="text"
+                          value={localCms.hero.atmosphereSubtitle || ''}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              hero: { ...localCms.hero, atmosphereSubtitle: e.target.value },
+                            })
+                          }
+                          placeholder="Designed for family dinners, cozy romantic dates..."
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Floating Mini Experience Card */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Floating Badge Title</label>
+                        <input
+                          type="text"
+                          value={localCms.hero.badgeTitle}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              hero: { ...localCms.hero, badgeTitle: e.target.value },
+                            })
+                          }
+                          placeholder="2 Outlets in Varanasi"
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Floating Badge Subtitle</label>
+                        <input
+                          type="text"
+                          value={localCms.hero.badgeSubtitle}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              hero: { ...localCms.hero, badgeSubtitle: e.target.value },
+                            })
+                          }
+                          placeholder="Sigra & Bhojuveer"
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Badge details */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Rating Text</label>
+                        <input
+                          type="text"
+                          value={localCms.hero.ratingScore}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              hero: { ...localCms.hero, ratingScore: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Review Count Text</label>
+                        <input
+                          type="text"
+                          value={localCms.hero.reviewCountText}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              hero: { ...localCms.hero, reviewCountText: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Hours Text</label>
+                        <input
+                          type="text"
+                          value={localCms.hero.todayHoursText}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              hero: { ...localCms.hero, todayHoursText: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. STORY SECTION CMS */}
+                <div className="bg-stone-900 border border-stone-800 rounded-xl p-5 space-y-4">
+                  <div className="pb-3 border-b border-stone-800">
+                    <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-amber-400" />
+                      <span>Heritage & Story Section (A to Z)</span>
+                    </h3>
+                    <p className="text-[11px] text-stone-400">Story copy, visual photography, culinary pillars, and founder quote.</p>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Story Kicker</label>
+                      <input
+                        type="text"
+                        value={localCms.story.kicker}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            story: { ...localCms.story, kicker: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Headline</label>
+                      <input
+                        type="text"
+                        value={localCms.story.headline}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            story: { ...localCms.story, headline: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-display"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Main Story Text</label>
+                      <textarea
+                        rows={3}
+                        value={localCms.story.paragraph}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            story: { ...localCms.story, paragraph: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                      />
+                    </div>
+
+                    {/* Story Media Image URL & Presets */}
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Story Photography Image URL</label>
+                      <input
+                        type="url"
+                        value={localCms.story.mediaUrl}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            story: { ...localCms.story, mediaUrl: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono mb-2"
+                      />
+                      <span className="text-[10px] text-stone-400 block mb-1">Quick Select Story Photo:</span>
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {presetAmbianceImages.map((pImg, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() =>
+                              setLocalCms({
+                                ...localCms,
+                                story: { ...localCms.story, mediaUrl: pImg },
+                              })
+                            }
+                            className={`w-14 h-10 rounded border overflow-hidden shrink-0 transition-all ${
+                              localCms.story.mediaUrl === pImg
+                                ? 'border-amber-400 ring-2 ring-amber-400'
+                                : 'border-stone-800 opacity-60 hover:opacity-100'
+                            }`}
+                          >
+                            <img src={pImg} alt="preset" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Story Card Overlay Title</label>
+                        <input
+                          type="text"
+                          value={localCms.story.cardTitle || ''}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              story: { ...localCms.story, cardTitle: e.target.value },
+                            })
+                          }
+                          placeholder="Two Sanctuaries. One Philosophy."
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-display"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Story Card Overlay Subtitle</label>
+                        <input
+                          type="text"
+                          value={localCms.story.cardSubtitle || ''}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              story: { ...localCms.story, cardSubtitle: e.target.value },
+                            })
+                          }
+                          placeholder="Sigra Flagship & Bhojuveer Cafe Lounge"
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Golden Accent Badge Number</label>
+                        <input
+                          type="text"
+                          value={localCms.story.badgeNumber}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              story: { ...localCms.story, badgeNumber: e.target.value },
+                            })
+                          }
+                          placeholder="e.g. 100% or 10+ Years"
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-amber-400 font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Golden Accent Badge Label</label>
+                        <input
+                          type="text"
+                          value={localCms.story.badgeLabel}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              story: { ...localCms.story, badgeLabel: e.target.value },
+                            })
+                          }
+                          placeholder="Scratch Cooking & Handcrafted Dough"
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Pillar 1 Title</label>
+                        <input
+                          type="text"
+                          value={localCms.story.feature1Title}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              story: { ...localCms.story, feature1Title: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                        <label className="block text-stone-400 text-[11px] uppercase mt-2 mb-1">Pillar 1 Description</label>
+                        <textarea
+                          rows={2}
+                          value={localCms.story.feature1Desc}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              story: { ...localCms.story, feature1Desc: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Pillar 2 Title</label>
+                        <input
+                          type="text"
+                          value={localCms.story.feature2Title}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              story: { ...localCms.story, feature2Title: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                        <label className="block text-stone-400 text-[11px] uppercase mt-2 mb-1">Pillar 2 Description</label>
+                        <textarea
+                          rows={2}
+                          value={localCms.story.feature2Desc}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              story: { ...localCms.story, feature2Desc: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Founder / Host Quote</label>
+                        <input
+                          type="text"
+                          value={localCms.story.quoteText}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              story: { ...localCms.story, quoteText: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white italic"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Quote Attribution</label>
+                        <input
+                          type="text"
+                          value={localCms.story.quoteAuthor}
+                          onChange={(e) =>
+                            setLocalCms({
+                              ...localCms,
+                              story: { ...localCms.story, quoteAuthor: e.target.value },
+                            })
+                          }
+                          className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. SOCIAL LINKS & FOOTER CMS */}
+                <div className="bg-stone-900 border border-stone-800 rounded-xl p-5 space-y-4">
+                  <div className="pb-3 border-b border-stone-800">
+                    <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                      <Share2 className="w-4 h-4 text-amber-400" />
+                      <span>Social Media, Contact & Footer Brand CMS</span>
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Instagram URL</label>
+                      <input
+                        type="url"
+                        value={localCms.socialLinks.instagram}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            socialLinks: { ...localCms.socialLinks, instagram: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Facebook URL</label>
+                      <input
+                        type="url"
+                        value={localCms.socialLinks.facebook}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            socialLinks: { ...localCms.socialLinks, facebook: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Official Email</label>
+                      <input
+                        type="email"
+                        value={localCms.socialLinks.email}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            socialLinks: { ...localCms.socialLinks, email: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Helpline Phone</label>
+                      <input
+                        type="text"
+                        value={localCms.socialLinks.phone || ''}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            socialLinks: { ...localCms.socialLinks, phone: e.target.value },
+                          })
+                        }
+                        placeholder="+91 6393 138 560"
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Brand Editorial Bio</label>
+                      <textarea
+                        rows={2}
+                        value={localCms.socialLinks.brandBio || ''}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            socialLinks: { ...localCms.socialLinks, brandBio: e.target.value },
+                          })
+                        }
+                        placeholder="“Making Banaras spicier, happier and deliciously yellow.”"
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-stone-400 text-[11px] uppercase mb-1">Copyright Footer Notice</label>
+                      <textarea
+                        rows={2}
+                        value={localCms.socialLinks.copyrightText}
+                        onChange={(e) =>
+                          setLocalCms({
+                            ...localCms,
+                            socialLinks: { ...localCms.socialLinks, copyrightText: e.target.value },
+                          })
+                        }
+                        className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg transition-colors cursor-pointer flex items-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Save & Publish Live</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* TAB: VIDEOS & REELS CMS */}
+          {activeTab === 'videos' && (
+            <div className="space-y-6 max-w-6xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-display text-white">Diner Videos & Cinema Reels CMS</h2>
+                  <p className="text-xs text-stone-400 mt-1">
+                    Upload MP4 video streams, culinary reels, and ambiance clips visible in the Cinema section.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsAddVideoOpen(true)}
+                  className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-bold rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm self-start sm:self-auto"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Upload / Add New Video</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {siteContent.videos.map((vid) => (
+                  <div
+                    key={vid.id}
+                    className="bg-stone-900 border border-stone-800 rounded-xl overflow-hidden p-4 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="relative aspect-16/9 rounded-lg overflow-hidden bg-stone-950 mb-3">
+                        <img src={vid.thumbnailUrl} alt={vid.title} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-amber-400 text-stone-950 flex items-center justify-center">
+                            <Play className="w-4 h-4 ml-0.5 fill-stone-950" />
+                          </div>
+                        </div>
+                        <span className="absolute top-2 left-2 bg-stone-950/80 text-amber-400 text-[10px] font-mono uppercase px-2 py-0.5 rounded">
+                          {vid.category}
+                        </span>
+                        {vid.duration && (
+                          <span className="absolute bottom-2 right-2 bg-stone-950/80 text-white text-[10px] font-mono px-1.5 py-0.5 rounded">
+                            {vid.duration}
+                          </span>
+                        )}
+                      </div>
+
+                      <h4 className="font-bold text-sm text-white mb-1">{vid.title}</h4>
+                      <p className="text-xs text-stone-400 line-clamp-2 mb-2 leading-relaxed">{vid.description}</p>
+                      <p className="text-[10px] text-stone-500 font-mono truncate">Stream: {vid.videoUrl}</p>
+                    </div>
+
+                    <div className="pt-3 border-t border-stone-800 flex items-center justify-between mt-3">
+                      <button
+                        onClick={() => setEditingVideo(vid)}
+                        className="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-medium rounded flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                        <span>Edit Video</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteVideo(vid.id)}
+                        className="p-1.5 text-stone-400 hover:text-red-400 hover:bg-stone-800 rounded transition-colors cursor-pointer"
+                        title="Delete video"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: FAQS MANAGER */}
+          {activeTab === 'faqs' && (
+            <div className="space-y-6 max-w-5xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-display text-white">Frequently Asked Questions CMS</h2>
+                  <p className="text-xs text-stone-400 mt-1">
+                    Manage guest queries, reservation policies, parking, and dining answers.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsAddFaqOpen(true)}
+                  className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-bold rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm self-start sm:self-auto"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add FAQ Item</span>
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {siteContent.faqs.map((faq) => (
+                  <div
+                    key={faq.id}
+                    className="bg-stone-900 border border-stone-800 rounded-xl p-4 flex items-start justify-between gap-4"
+                  >
+                    <div className="space-y-1 flex-1 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-sm font-display">{faq.question}</span>
+                        <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-amber-950 text-amber-400">
+                          {faq.category}
+                        </span>
+                      </div>
+                      <p className="text-stone-300 leading-relaxed pt-1">{faq.answer}</p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => setEditingFaq(faq)}
+                        className="p-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded"
+                        title="Edit FAQ"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFaq(faq.id)}
+                        className="p-1.5 bg-stone-800 hover:bg-red-900 text-stone-400 hover:text-white rounded"
+                        title="Delete FAQ"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -771,7 +1871,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
-          {/* TAB 3: MENU & DISHES EDITOR (CRUD + UPLOAD) */}
+          {/* TAB 3: MENU & DISHES EDITOR */}
           {activeTab === 'menu' && (
             <div className="space-y-6 max-w-6xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -791,7 +1891,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </button>
               </div>
 
-              {/* Search & Category Filter */}
+              {/* Search */}
               <div className="bg-stone-900 border border-stone-800 p-3 rounded-xl flex flex-col sm:flex-row gap-3 items-center justify-between">
                 <div className="relative w-full sm:w-80">
                   <Search className="w-4 h-4 text-stone-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -822,7 +1922,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       className="bg-stone-900 border border-stone-800 rounded-xl overflow-hidden p-4 flex flex-col justify-between hover:border-stone-700 transition-colors"
                     >
                       <div>
-                        {/* Image Thumbnail with Tag */}
                         <div className="relative aspect-16/9 rounded-lg overflow-hidden bg-stone-950 mb-3">
                           <SafeImage
                             src={dish.image}
@@ -867,7 +1966,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         )}
                       </div>
 
-                      {/* Card Action Controls */}
                       <div className="pt-3 border-t border-stone-800 flex items-center justify-between">
                         <span className="text-[11px] text-stone-400 font-mono">
                           ID: {dish.id}
@@ -901,7 +1999,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <div className="space-y-6 max-w-6xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold font-display text-white">Photo Gallery Manager</h2>
+                  <h2 className="text-2xl font-bold font-display text-white">Photo Gallery CMS</h2>
                   <p className="text-xs text-stone-400 mt-1">
                     Upload and organize diner photography into 'Our Food', 'Our Ambiance', and 'Customer Moments'.
                   </p>
@@ -916,7 +2014,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </button>
               </div>
 
-              {/* Photos Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {galleryPhotos.map((photo) => (
                   <div
@@ -944,14 +2041,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <div className="pt-2.5 border-t border-stone-800 flex items-center justify-between">
                       <button
                         onClick={() => setEditingPhoto(photo)}
-                        className="text-xs text-stone-300 hover:text-white flex items-center gap-1"
+                        className="text-xs text-stone-300 hover:text-white flex items-center gap-1 cursor-pointer"
                       >
                         <Edit3 className="w-3 h-3" />
                         <span>Edit Caption</span>
                       </button>
                       <button
                         onClick={() => handleDeletePhoto(photo.id)}
-                        className="text-xs text-stone-400 hover:text-red-400 flex items-center gap-1"
+                        className="text-xs text-stone-400 hover:text-red-400 flex items-center gap-1 cursor-pointer"
                       >
                         <Trash2 className="w-3 h-3" />
                         <span>Delete</span>
@@ -963,7 +2060,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
-          {/* TAB 5: REVIEWS & MODERATION CENTER */}
+          {/* TAB 5: REVIEWS MODERATION */}
           {activeTab === 'reviews' && (
             <div className="space-y-6 max-w-6xl">
               <div>
@@ -973,7 +2070,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </p>
               </div>
 
-              {/* Reviews List */}
               <div className="space-y-3">
                 {reviews.map((rev) => (
                   <div
@@ -999,7 +2095,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       )}
                     </div>
 
-                    {/* Status & Moderation Controls */}
                     <div className="flex items-center gap-2.5 shrink-0">
                       <span
                         className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded font-mono ${
@@ -1033,7 +2128,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                       <button
                         onClick={() => handleDeleteReview(rev.id)}
-                        className="p-1 text-stone-500 hover:text-red-400 transition-colors"
+                        className="p-1 text-stone-500 hover:text-red-400 transition-colors cursor-pointer"
                         title="Delete permanently"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1045,7 +2140,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
-          {/* TAB 6: KITCHEN & TAKEAWAY ORDERS */}
+          {/* TAB 6: KITCHEN ORDERS */}
           {activeTab === 'orders' && (
             <div className="space-y-6 max-w-6xl">
               <div>
@@ -1080,7 +2175,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                         <div className="text-xs text-stone-300 mb-3">
                           <p className="font-semibold text-white">
-                            {ord.orderType === 'dine_in' ? `Table: ${ord.tableNumber}` : `Takeaway Pickup: ${ord.customerName || 'Guest'}`}
+                            {ord.orderType === 'dine_in' ? `Table: ${ord.tableNumber}` : `Takeaway: ${ord.customerName || 'Guest'}`}
                           </p>
                           <p className="text-stone-400 font-mono text-[11px]">Phone: {ord.customerPhone}</p>
                           {ord.cookingNotes && (
@@ -1107,14 +2202,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         </div>
                       </div>
 
-                      {/* Status Stepper */}
                       <div className="pt-2 flex items-center justify-between gap-2 border-t border-stone-800">
                         <select
                           value={ord.status}
                           onChange={(e) =>
                             handleUpdateOrderStatus(
                               ord.id,
-                              e.target.value as 'received' | 'preparing' | 'served' | 'completed' | 'cancelled'
+                              e.target.value as any
                             )
                           }
                           className="bg-stone-950 border border-stone-700 text-xs rounded px-2 py-1 text-white font-medium focus:outline-none"
@@ -1141,30 +2235,125 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
-          {/* TAB 7: BRANCHES & OUTLETS SETTINGS */}
+          {/* TAB 7: BRANCHES SETTINGS */}
           {activeTab === 'branches' && (
-            <div className="space-y-6 max-w-4xl">
-              <div>
-                <h2 className="text-2xl font-bold font-display text-white">Outlets & Store Operations</h2>
-                <p className="text-xs text-stone-400 mt-1">
-                  Manage phone lines, addresses, operating hours, and capacity limits.
-                </p>
+            <div className="space-y-6 max-w-5xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-display text-white">Outlets & Store Operations CMS</h2>
+                  <p className="text-xs text-stone-400 mt-1">
+                    Manage outlet names, locations, phone lines, seating capacity, google maps, and amenities.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newId = `outlet-${Date.now()}`;
+                    const newBranch: BranchInfo = {
+                      id: newId,
+                      name: 'Behind Yellow Doors New Outlet',
+                      tagline: 'Artisanal Cafe & Lounge',
+                      address: 'Varanasi, Uttar Pradesh, India',
+                      landmark: 'Near Major Landmark',
+                      phone: '+91 6393 138 560',
+                      altPhone: '+91 9151 805 152',
+                      email: 'contact@byddiner.com',
+                      timings: '11:30 AM – 11:00 PM Daily',
+                      googleMapsUrl: 'https://maps.google.com',
+                      seatingCapacity: 45,
+                      features: ['Wood-Fired Pizza', 'Artisanal Coffee', 'Free High-Speed WiFi'],
+                    };
+                    onUpdateBranches((prev) => [...prev, newBranch]);
+                    showToast('New outlet added! Fill in the details below.');
+                  }}
+                  className="px-3.5 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-bold rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm self-start sm:self-auto"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add New Outlet</span>
+                </button>
               </div>
 
               <div className="space-y-6">
                 {branches.map((b) => (
                   <div key={b.id} className="bg-stone-900 border border-stone-800 rounded-xl p-5 space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-stone-800">
-                      <div>
-                        <h4 className="font-bold text-lg text-white">{b.name}</h4>
-                        <p className="text-xs text-amber-400">{b.tagline}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-stone-800 gap-2">
+                      <div className="flex items-center gap-3">
+                        <Store className="w-5 h-5 text-amber-400 shrink-0" />
+                        <div>
+                          <h4 className="font-bold text-lg text-white font-display">{b.name}</h4>
+                          <p className="text-xs text-amber-400">{b.tagline}</p>
+                        </div>
                       </div>
-                      <span className="px-2.5 py-0.5 rounded bg-stone-800 text-stone-300 font-mono text-xs uppercase">
-                        Capacity: {b.seatingCapacity} seats
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-1 rounded bg-stone-800 text-stone-300 font-mono text-xs">
+                          Capacity: {b.seatingCapacity} seats
+                        </span>
+                        {branches.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(`Delete outlet "${b.name}"?`)) {
+                                onUpdateBranches((prev) => prev.filter((item) => item.id !== b.id));
+                                showToast(`Outlet "${b.name}" removed.`);
+                              }
+                            }}
+                            className="p-1.5 text-stone-400 hover:text-red-400 hover:bg-stone-800 rounded transition-colors"
+                            title="Delete Outlet"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Outlet Display Name</label>
+                        <input
+                          type="text"
+                          value={b.name}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            onUpdateBranches((prev) =>
+                              prev.map((item) => (item.id === b.id ? { ...item, name: val } : item))
+                            );
+                          }}
+                          className="w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-white font-bold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Tagline / Ambiance Title</label>
+                        <input
+                          type="text"
+                          value={b.tagline}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            onUpdateBranches((prev) =>
+                              prev.map((item) => (item.id === b.id ? { ...item, tagline: val } : item))
+                            );
+                          }}
+                          className="w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Seating Capacity (Guests)</label>
+                        <input
+                          type="number"
+                          min="10"
+                          value={b.seatingCapacity}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            onUpdateBranches((prev) =>
+                              prev.map((item) => (item.id === b.id ? { ...item, seatingCapacity: val } : item))
+                            );
+                          }}
+                          className="w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-white font-mono"
+                        />
+                      </div>
+
                       <div>
                         <label className="block text-stone-400 text-[11px] uppercase mb-1">Primary Phone</label>
                         <input
@@ -1177,6 +2366,66 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             );
                           }}
                           className="w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-white font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Secondary / Manager Phone</label>
+                        <input
+                          type="text"
+                          value={b.altPhone || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            onUpdateBranches((prev) =>
+                              prev.map((item) => (item.id === b.id ? { ...item, altPhone: val } : item))
+                            );
+                          }}
+                          className="w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-white font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Official Email</label>
+                        <input
+                          type="email"
+                          value={b.email || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            onUpdateBranches((prev) =>
+                              prev.map((item) => (item.id === b.id ? { ...item, email: val } : item))
+                            );
+                          }}
+                          className="w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-white font-mono"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Full Street Address</label>
+                        <input
+                          type="text"
+                          value={b.address}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            onUpdateBranches((prev) =>
+                              prev.map((item) => (item.id === b.id ? { ...item, address: val } : item))
+                            );
+                          }}
+                          className="w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Landmark</label>
+                        <input
+                          type="text"
+                          value={b.landmark || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            onUpdateBranches((prev) =>
+                              prev.map((item) => (item.id === b.id ? { ...item, landmark: val } : item))
+                            );
+                          }}
+                          className="w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-white"
                         />
                       </div>
 
@@ -1196,16 +2445,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </div>
 
                       <div className="sm:col-span-2">
-                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Address & Landmark</label>
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Google Maps Direction URL</label>
                         <input
-                          type="text"
-                          value={b.address}
+                          type="url"
+                          value={b.googleMapsUrl || ''}
                           onChange={(e) => {
                             const val = e.target.value;
                             onUpdateBranches((prev) =>
-                              prev.map((item) => (item.id === b.id ? { ...item, address: val } : item))
+                              prev.map((item) => (item.id === b.id ? { ...item, googleMapsUrl: val } : item))
                             );
                           }}
+                          placeholder="https://maps.google.com/..."
+                          className="w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-white font-mono"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-3">
+                        <label className="block text-stone-400 text-[11px] uppercase mb-1">Features & Amenities (Comma separated)</label>
+                        <input
+                          type="text"
+                          value={b.features ? b.features.join(', ') : ''}
+                          onChange={(e) => {
+                            const val = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
+                            onUpdateBranches((prev) =>
+                              prev.map((item) => (item.id === b.id ? { ...item, features: val } : item))
+                            );
+                          }}
+                          placeholder="e.g. Wood-Fired Pizza, Valet Parking, Terrace Seating"
                           className="w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-white"
                         />
                       </div>
@@ -1216,9 +2482,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
         </main>
+        </div>
       </div>
 
-      {/* MODAL 1: ADD / EDIT RESERVATION */}
+      {/* MODALS */}
       {(isAddReservationOpen || editingReservation) && (
         <ReservationEditModal
           reservation={editingReservation}
@@ -1230,7 +2497,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         />
       )}
 
-      {/* MODAL 2: ADD / EDIT DISH */}
       {(isAddDishOpen || editingDish) && (
         <DishEditModal
           dish={editingDish}
@@ -1243,11 +2509,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         />
       )}
 
-      {/* MODAL 3: ADD / EDIT PHOTO */}
       {(isAddPhotoOpen || editingPhoto) && (
         <PhotoEditModal
           photo={editingPhoto}
-          presetImages={presetFoodImages}
+          foodPresets={presetFoodImages}
+          ambiancePresets={presetAmbianceImages}
+          momentsPresets={presetMomentsImages}
           onClose={() => {
             setIsAddPhotoOpen(false);
             setEditingPhoto(null);
@@ -1255,12 +2522,343 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           onSave={handleSavePhoto}
         />
       )}
+
+      {(isAddVideoOpen || editingVideo) && (
+        <VideoEditModal
+          video={editingVideo}
+          onClose={() => {
+            setIsAddVideoOpen(false);
+            setEditingVideo(null);
+          }}
+          onSave={handleSaveVideo}
+        />
+      )}
+
+      {(isAddFaqOpen || editingFaq) && (
+        <FaqEditModal
+          faq={editingFaq}
+          onClose={() => {
+            setIsAddFaqOpen(false);
+            setEditingFaq(null);
+          }}
+          onSave={handleSaveFaq}
+        />
+      )}
     </div>
   );
 };
 
 // ==========================================
-// SUB-MODAL: RESERVATION CREATE / EDIT
+// SUB-MODAL: VIDEO EDIT
+// ==========================================
+interface VideoEditModalProps {
+  video: DinerVideo | null;
+  onClose: () => void;
+  onSave: (vid: DinerVideo) => void;
+}
+
+const VideoEditModal: React.FC<VideoEditModalProps> = ({ video, onClose, onSave }) => {
+  const [title, setTitle] = useState(video?.title || '');
+  const [description, setDescription] = useState(video?.description || '');
+  const [category, setCategory] = useState<'culinary' | 'ambiance' | 'stories'>(video?.category || 'culinary');
+  const [videoUrl, setVideoUrl] = useState(video?.videoUrl || '');
+  const [thumbnailUrl, setThumbnailUrl] = useState(video?.thumbnailUrl || '');
+  const [duration, setDuration] = useState(video?.duration || '0:45');
+
+  const presetVideos = [
+    {
+      label: 'Wood-Fired Pizza Dough',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-chef-kneading-dough-42416-large.mp4',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80',
+      title: 'Handcrafting Neapolitan Sourdough',
+      category: 'culinary' as const,
+      duration: '0:45',
+      description: 'Watch Chef prepare our 48-hour slow fermented dough with San Marzano coulis.',
+    },
+    {
+      label: 'Sizzling Brownie & Gelato',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-pouring-chocolate-sauce-on-ice-cream-41589-large.mp4',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80',
+      title: 'The Sizzling Cast Iron Brownie Experience',
+      category: 'culinary' as const,
+      duration: '0:32',
+      description: 'Decadent dark chocolate molten fudge melting over Madagascar vanilla gelato.',
+    },
+    {
+      label: 'Evening Bar & Ambiance',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waiter-serving-drinks-in-a-bar-42171-large.mp4',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80',
+      title: 'Evening Ambiance Behind Yellow Doors',
+      category: 'ambiance' as const,
+      duration: '1:10',
+      description: 'Filament lighting, cozy banquette booths, and acoustic melodies at our Sigra dining hall.',
+    },
+    {
+      label: 'Single Origin Pour Over Coffee',
+      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-making-coffee-in-a-glass-pot-42418-large.mp4',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=800&q=80',
+      title: 'Artisan Single Origin Pour Over Coffee',
+      category: 'culinary' as const,
+      duration: '0:50',
+      description: 'Slow-drip specialty brews crafted by certified baristas at Bhojuveer deck.',
+    },
+  ];
+
+  const handleSelectPreset = (p: typeof presetVideos[0]) => {
+    setTitle(p.title);
+    setVideoUrl(p.videoUrl);
+    setThumbnailUrl(p.thumbnailUrl);
+    setCategory(p.category);
+    setDuration(p.duration);
+    setDescription(p.description);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !videoUrl.trim()) return;
+
+    onSave({
+      id: video ? video.id : `vid-${Date.now()}`,
+      title: title.trim(),
+      description: description.trim(),
+      category,
+      videoUrl: videoUrl.trim(),
+      thumbnailUrl: thumbnailUrl.trim() || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+      duration: duration.trim(),
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-stone-900 border border-stone-800 rounded-2xl max-w-lg w-full p-6 text-white relative animate-in zoom-in-95 duration-200">
+        <button onClick={onClose} className="absolute top-4 right-4 text-stone-400 hover:text-white">
+          <X className="w-5 h-5" />
+        </button>
+
+        <h3 className="text-xl font-bold font-display mb-1">
+          {video ? 'Edit Diner Video Reel' : 'Add New Cinema Video'}
+        </h3>
+        <p className="text-xs text-stone-400 mb-5">
+          Embed an MP4 clip or stream into the Cinema & Stories section.
+        </p>
+
+        {/* Quick Presets Bar */}
+        <div className="mb-4 bg-stone-950 p-2.5 rounded-xl border border-stone-800">
+          <span className="text-[10px] text-stone-400 block mb-1.5 font-semibold uppercase">1-Click Demo Video Presets:</span>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {presetVideos.map((pv, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleSelectPreset(pv)}
+                className={`px-2.5 py-1 text-[11px] rounded-lg border whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
+                  videoUrl === pv.videoUrl
+                    ? 'bg-amber-400 text-stone-950 font-bold border-amber-300'
+                    : 'bg-stone-900 text-stone-300 border-stone-700 hover:border-amber-400/70'
+                }`}
+              >
+                {pv.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div>
+            <label className="block text-stone-400 text-[11px] mb-1">Video Title *</label>
+            <input
+              type="text"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Sizzling Cast Iron Brownie Preparation"
+              className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-stone-400 text-[11px] mb-1">Category</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as any)}
+                className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+              >
+                <option value="culinary">Culinary Craft</option>
+                <option value="ambiance">Ambiance & Atmosphere</option>
+                <option value="stories">Diner Moments</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-stone-400 text-[11px] mb-1">Duration Tag</label>
+              <input
+                type="text"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="e.g. 0:45"
+                className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-stone-400 text-[11px] mb-1">Video Stream URL (MP4 / WebM) *</label>
+            <input
+              type="url"
+              required
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="https://...mp4"
+              className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block text-stone-400 text-[11px] mb-1">Cover Thumbnail Image URL</label>
+            <input
+              type="url"
+              value={thumbnailUrl}
+              onChange={(e) => setThumbnailUrl(e.target.value)}
+              placeholder="https://..."
+              className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block text-stone-400 text-[11px] mb-1">Description</label>
+            <textarea
+              rows={2}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+            />
+          </div>
+
+          <div className="pt-2 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 font-bold rounded"
+            >
+              Save Video
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// SUB-MODAL: FAQ EDIT
+// ==========================================
+interface FaqEditModalProps {
+  faq: FaqItem | null;
+  onClose: () => void;
+  onSave: (faq: FaqItem) => void;
+}
+
+const FaqEditModal: React.FC<FaqEditModalProps> = ({ faq, onClose, onSave }) => {
+  const [question, setQuestion] = useState(faq?.question || '');
+  const [answer, setAnswer] = useState(faq?.answer || '');
+  const [category, setCategory] = useState<'reservations' | 'food' | 'locations' | 'events'>(
+    faq?.category || 'reservations'
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!question.trim() || !answer.trim()) return;
+
+    onSave({
+      id: faq ? faq.id : `faq-${Date.now()}`,
+      question: question.trim(),
+      answer: answer.trim(),
+      category,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-stone-900 border border-stone-800 rounded-2xl max-w-md w-full p-6 text-white relative animate-in zoom-in-95 duration-200">
+        <button onClick={onClose} className="absolute top-4 right-4 text-stone-400 hover:text-white">
+          <X className="w-5 h-5" />
+        </button>
+
+        <h3 className="text-xl font-bold font-display mb-1">
+          {faq ? 'Edit FAQ Item' : 'Add New FAQ Question'}
+        </h3>
+        <p className="text-xs text-stone-400 mb-5">
+          Provide helpful information for diners in Varanasi.
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div>
+            <label className="block text-stone-400 text-[11px] mb-1">Question *</label>
+            <input
+              type="text"
+              required
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="e.g. Do you have Jain food?"
+              className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-stone-400 text-[11px] mb-1">Category</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as any)}
+              className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+            >
+              <option value="reservations">Reservations & Bookings</option>
+              <option value="food">Food, Menu & Diets</option>
+              <option value="locations">Locations & Parking</option>
+              <option value="events">Private Events</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-stone-400 text-[11px] mb-1">Answer *</label>
+            <textarea
+              rows={4}
+              required
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder="Provide a clear, welcoming answer..."
+              className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
+            />
+          </div>
+
+          <div className="pt-2 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 font-bold rounded"
+            >
+              Save FAQ
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// SUB-MODALS: RESERVATION, DISH, PHOTO
 // ==========================================
 interface ReservationEditModalProps {
   reservation: Reservation | null;
@@ -1272,11 +2870,11 @@ const ReservationEditModal: React.FC<ReservationEditModalProps> = ({ reservation
   const [fullName, setFullName] = useState(reservation?.fullName || '');
   const [phone, setPhone] = useState(reservation?.phone || '');
   const [email, setEmail] = useState(reservation?.email || '');
-  const [branch, setBranch] = useState<'sigra' | 'bhojuveer'>(reservation?.branch || 'sigra');
+  const [branch, setBranch] = useState<'sigra' | 'bhojuveer' | string>(reservation?.branch || 'sigra');
   const [date, setDate] = useState(reservation?.date || new Date().toISOString().split('T')[0]);
   const [timeSlot, setTimeSlot] = useState(reservation?.timeSlot || '7:30 PM');
   const [guests, setGuests] = useState(reservation?.guests || 2);
-  const [seatingArea, setSeatingArea] = useState<'indoor_booth' | 'yellow_door_terrace' | 'family_lounge'>(
+  const [seatingArea, setSeatingArea] = useState<'indoor_booth' | 'yellow_door_terrace' | 'family_lounge' | string>(
     reservation?.seatingArea || 'indoor_booth'
   );
   const [status, setStatus] = useState<'confirmed' | 'pending' | 'cancelled'>(reservation?.status || 'confirmed');
@@ -1454,9 +3052,6 @@ const ReservationEditModal: React.FC<ReservationEditModalProps> = ({ reservation
   );
 };
 
-// ==========================================
-// SUB-MODAL: DISH CREATE / EDIT
-// ==========================================
 interface DishEditModalProps {
   dish: MenuItem | null;
   presetImages: string[];
@@ -1470,10 +3065,20 @@ const DishEditModal: React.FC<DishEditModalProps> = ({ dish, presetImages, onClo
   const [price, setPrice] = useState(dish?.price || 350);
   const [dietary, setDietary] = useState<DietaryType>(dish?.dietary || 'veg');
   const [isChefsSpecial, setIsChefsSpecial] = useState(dish?.isChefsSpecial || false);
+  const [isPopular, setIsPopular] = useState(dish?.isPopular || false);
+  const [branchAvailability, setBranchAvailability] = useState<string[]>(
+    dish?.branchAvailability || ['sigra', 'bhojuveer']
+  );
   const [spiceLevel, setSpiceLevel] = useState<0 | 1 | 2 | 3>(dish?.spiceLevel || 1);
   const [description, setDescription] = useState(dish?.description || '');
   const [ingredientsText, setIngredientsText] = useState(dish?.ingredients ? dish.ingredients.join(', ') : '');
   const [image, setImage] = useState(dish?.image || presetImages[0]);
+
+  const toggleBranch = (bId: string) => {
+    setBranchAvailability((prev) =>
+      prev.includes(bId) ? prev.filter((id) => id !== bId) : [...prev, bId]
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1491,6 +3096,8 @@ const DishEditModal: React.FC<DishEditModalProps> = ({ dish, presetImages, onClo
       price: Number(price),
       dietary,
       isChefsSpecial,
+      isPopular,
+      branchAvailability: branchAvailability.length > 0 ? (branchAvailability as any) : undefined,
       spiceLevel,
       description: description.trim(),
       ingredients: ingArray.length > 0 ? ingArray : undefined,
@@ -1550,6 +3157,7 @@ const DishEditModal: React.FC<DishEditModalProps> = ({ dish, presetImages, onClo
                 <option value="starters">Small Plates & Starters</option>
                 <option value="pizza_pasta">Wood-Fired Pizza & Pasta</option>
                 <option value="global_mains">Global Mains & Curries</option>
+                <option value="asian_dimsum">Asian Dim Sum & Bowls</option>
                 <option value="texmex">Tex-Mex & Tacos</option>
                 <option value="beverages">Artisanal Coffee & Shakes</option>
                 <option value="desserts">Decadent Desserts</option>
@@ -1569,7 +3177,7 @@ const DishEditModal: React.FC<DishEditModalProps> = ({ dish, presetImages, onClo
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center pt-1">
             <div>
               <label className="block text-stone-400 text-[11px] mb-1">Spice Level (0 to 3)</label>
               <select
@@ -1583,16 +3191,53 @@ const DishEditModal: React.FC<DishEditModalProps> = ({ dish, presetImages, onClo
                 <option value="3">Fiery Chef Spiced (3)</option>
               </select>
             </div>
-            <div className="pt-4 flex items-center gap-2">
+            <div className="pt-3 flex items-center gap-2">
               <input
                 type="checkbox"
                 id="isChefsSpecial"
                 checked={isChefsSpecial}
                 onChange={(e) => setIsChefsSpecial(e.target.checked)}
-                className="w-4 h-4 rounded text-amber-500 bg-stone-950 border-stone-700"
+                className="w-4 h-4 rounded text-amber-500 bg-stone-950 border-stone-700 cursor-pointer"
               />
               <label htmlFor="isChefsSpecial" className="text-stone-300 font-semibold cursor-pointer">
-                Chef&apos;s Signature Special
+                Chef&apos;s Special
+              </label>
+            </div>
+            <div className="pt-3 flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isPopular"
+                checked={isPopular}
+                onChange={(e) => setIsPopular(e.target.checked)}
+                className="w-4 h-4 rounded text-amber-500 bg-stone-950 border-stone-700 cursor-pointer"
+              />
+              <label htmlFor="isPopular" className="text-stone-300 font-semibold cursor-pointer">
+                Diner Popular
+              </label>
+            </div>
+          </div>
+
+          {/* Branch Availability */}
+          <div className="pt-1">
+            <label className="block text-stone-400 text-[11px] mb-1.5 uppercase">Available at Outlets:</label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-stone-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={branchAvailability.includes('sigra')}
+                  onChange={() => toggleBranch('sigra')}
+                  className="w-4 h-4 rounded text-amber-500 bg-stone-950 border-stone-700"
+                />
+                <span>Sigra Flagship</span>
+              </label>
+              <label className="flex items-center gap-2 text-stone-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={branchAvailability.includes('bhojuveer')}
+                  onChange={() => toggleBranch('bhojuveer')}
+                  className="w-4 h-4 rounded text-amber-500 bg-stone-950 border-stone-700"
+                />
+                <span>Bhojuveer Lounge</span>
               </label>
             </div>
           </div>
@@ -1620,7 +3265,6 @@ const DishEditModal: React.FC<DishEditModalProps> = ({ dish, presetImages, onClo
             />
           </div>
 
-          {/* Image URL with Preset Pickers */}
           <div>
             <label className="block text-stone-400 text-[11px] mb-1">Photo Image URL</label>
             <input
@@ -1669,36 +3313,48 @@ const DishEditModal: React.FC<DishEditModalProps> = ({ dish, presetImages, onClo
   );
 };
 
-// ==========================================
-// SUB-MODAL: PHOTO CREATE / EDIT
-// ==========================================
 interface PhotoEditModalProps {
   photo: GalleryPhoto | null;
-  presetImages: string[];
+  foodPresets: string[];
+  ambiancePresets: string[];
+  momentsPresets: string[];
   onClose: () => void;
   onSave: (photo: GalleryPhoto) => void;
 }
 
-const PhotoEditModal: React.FC<PhotoEditModalProps> = ({ photo, presetImages, onClose, onSave }) => {
+const PhotoEditModal: React.FC<PhotoEditModalProps> = ({
+  photo,
+  foodPresets,
+  ambiancePresets,
+  momentsPresets,
+  onClose,
+  onSave,
+}) => {
   const [title, setTitle] = useState(photo?.title || '');
   const [category, setCategory] = useState<'food' | 'ambiance' | 'moments'>(photo?.category || 'food');
   const [location, setLocation] = useState(photo?.location || 'Sigra Wood-Fired Oven');
   const [caption, setCaption] = useState(photo?.caption || '');
-  const [imageUrl, setImageUrl] = useState(photo?.imageUrl || presetImages[0]);
+  const [imageUrl, setImageUrl] = useState(photo?.imageUrl || foodPresets[0]);
+
+  const activePresets =
+    category === 'food'
+      ? foodPresets
+      : category === 'ambiance'
+      ? ambiancePresets
+      : momentsPresets;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !imageUrl.trim()) return;
 
-    const savedPhoto: GalleryPhoto = {
+    onSave({
       id: photo ? photo.id : `photo-${Date.now()}`,
       title: title.trim(),
       category,
       location: location.trim(),
       caption: caption.trim(),
       imageUrl,
-    };
-    onSave(savedPhoto);
+    });
   };
 
   return (
@@ -1733,7 +3389,13 @@ const PhotoEditModal: React.FC<PhotoEditModalProps> = ({ photo, presetImages, on
               <label className="block text-stone-400 text-[11px] mb-1">Gallery Section</label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value as any)}
+                onChange={(e) => {
+                  const newCat = e.target.value as 'food' | 'ambiance' | 'moments';
+                  setCategory(newCat);
+                  if (newCat === 'food') setImageUrl(foodPresets[0]);
+                  else if (newCat === 'ambiance') setImageUrl(ambiancePresets[0]);
+                  else setImageUrl(momentsPresets[0]);
+                }}
                 className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white"
               >
                 <option value="food">Our Food</option>
@@ -1775,15 +3437,19 @@ const PhotoEditModal: React.FC<PhotoEditModalProps> = ({ photo, presetImages, on
               className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-white font-mono mb-2"
             />
 
-            <span className="text-[10px] text-stone-400 block mb-1">Or pick a preset asset:</span>
+            <span className="text-[10px] text-stone-400 block mb-1">
+              Pick from {category.toUpperCase()} presets:
+            </span>
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {presetImages.map((pImg, idx) => (
+              {activePresets.map((pImg, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => setImageUrl(pImg)}
-                  className={`w-14 h-10 rounded border overflow-hidden shrink-0 ${
-                    imageUrl === pImg ? 'border-amber-400 ring-1 ring-amber-400' : 'border-stone-800 opacity-60'
+                  className={`w-14 h-10 rounded border overflow-hidden shrink-0 transition-all ${
+                    imageUrl === pImg
+                      ? 'border-amber-400 ring-2 ring-amber-400'
+                      : 'border-stone-800 opacity-60 hover:opacity-100'
                   }`}
                 >
                   <img src={pImg} alt="preset" className="w-full h-full object-cover" />

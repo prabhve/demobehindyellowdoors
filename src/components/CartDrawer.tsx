@@ -255,7 +255,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       placeholder="e.g. Table 4 or Booth 2"
                       value={tableNumber}
                       onChange={(e) => setTableNumber(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2 text-xs text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-base sm:text-xs text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
                     />
                   </div>
                 ) : (
@@ -268,7 +268,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       placeholder="Your name for pickup..."
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2 text-xs text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-base sm:text-xs text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
                     />
                   </div>
                 )}
@@ -282,7 +282,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     placeholder="10-digit number"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2 text-xs text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-base sm:text-xs text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
 
@@ -295,7 +295,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     placeholder="e.g. Extra crisp crust, mild spice..."
                     value={cookingNotes}
                     onChange={(e) => setCookingNotes(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2 text-xs text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-base sm:text-xs text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
 

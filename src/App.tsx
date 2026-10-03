@@ -5,16 +5,21 @@ import { StorySection } from './components/StorySection';
 import { MenuSection } from './components/MenuSection';
 import { ReservationSection } from './components/ReservationSection';
 import { GallerySection } from './components/GallerySection';
+import { VideoSection } from './components/VideoSection';
 import { ReviewsSection } from './components/ReviewsSection';
+import { FaqSection } from './components/FaqSection';
 import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
 import { BranchesModal } from './components/BranchesModal';
 import { SpeedAuditBadge } from './components/SpeedAuditBadge';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { LoadingScreen } from './components/LoadingScreen';
+import { AnnouncementBanner } from './components/AnnouncementBanner';
+import { ScrollProgressBar } from './components/ScrollProgressBar';
+import { BackToTopButton } from './components/BackToTopButton';
 import { AdminPanel } from './components/admin/AdminPanel';
-import { BranchInfo, CartItem, GalleryPhoto, KitchenOrder, MenuItem, Reservation, Review } from './types';
-import { BRANCHES, GALLERY_PHOTOS, INITIAL_REVIEWS, MENU_ITEMS } from './data/restaurantData';
+import { BranchInfo, CartItem, GalleryPhoto, KitchenOrder, MenuItem, Reservation, Review, SiteContent } from './types';
+import { BRANCHES, DEFAULT_SITE_CONTENT, GALLERY_PHOTOS, INITIAL_REVIEWS, MENU_ITEMS } from './data/restaurantData';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -220,6 +225,25 @@ export default function App() {
     }
   }, [orders]);
 
+  // Site Content (Hero, Story, FAQs, Videos, Announcements, Social Links - Full CMS)
+  const [siteContent, setSiteContent] = useState<SiteContent>(() => {
+    try {
+      const stored = localStorage.getItem('byd_site_content');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.error(e);
+    }
+    return DEFAULT_SITE_CONTENT;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('byd_site_content', JSON.stringify(siteContent));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [siteContent]);
+
   // Reset demo data
   const handleResetToDefaults = () => {
     localStorage.removeItem('byd_menu');
@@ -228,6 +252,7 @@ export default function App() {
     localStorage.removeItem('byd_branches');
     localStorage.removeItem('byd_orders');
     localStorage.removeItem('byd_reservations');
+    localStorage.removeItem('byd_site_content');
 
     setMenuItems(MENU_ITEMS);
     setGalleryPhotos(GALLERY_PHOTOS);
@@ -235,11 +260,12 @@ export default function App() {
     setBranches(BRANCHES);
     setOrders([]);
     setReservations([]);
+    setSiteContent(DEFAULT_SITE_CONTENT);
   };
 
   // Quick reservation prefill
   const [bookingPrefill, setBookingPrefill] = useState<{
-    branch: 'sigra' | 'bhojuveer';
+    branch: 'sigra' | 'bhojuveer' | string;
     date: string;
     guests: number;
   }>({
@@ -270,7 +296,7 @@ export default function App() {
   // Section observer for Navbar
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['menu', 'reservations', 'gallery', 'reviews', 'story'];
+      const sections = ['menu', 'reservations', 'gallery', 'videos', 'reviews', 'story', 'faq'];
       const scrollPosition = window.scrollY + 200;
 
       for (const sectionId of sections) {
@@ -351,20 +377,29 @@ export default function App() {
     }
   };
 
-  const handleQuickReserve = (branch: 'sigra' | 'bhojuveer', date: string, guests: number) => {
+  const handleQuickReserve = (branch: 'sigra' | 'bhojuveer' | string, date: string, guests: number) => {
     setBookingPrefill({ branch, date, guests });
     scrollToReservation();
   };
 
-  const handleBranchSelectedForBooking = (branchId: 'sigra' | 'bhojuveer') => {
+  const handleBranchSelectedForBooking = (branchId: 'sigra' | 'bhojuveer' | string) => {
     setBookingPrefill((prev) => ({ ...prev, branch: branchId }));
     scrollToReservation();
   };
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col font-sans selection:bg-amber-400 selection:text-stone-950">
+      {/* Top Scroll Progress Indicator */}
+      <ScrollProgressBar />
+
       {/* Intro Loading Screen with Authentic Animated BYD Doors & Logo */}
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
+
+      {/* Top Diner Announcement Banner (CMS Editable) */}
+      <AnnouncementBanner
+        announcement={siteContent.announcement}
+        onOpenReservation={scrollToReservation}
+      />
 
       {/* 3-Zone Strict Top Bar */}
       <Navbar
@@ -376,14 +411,15 @@ export default function App() {
       />
 
       <main className="flex-1">
-        {/* Cinematic Hero with yellow doors motif and quick booking widget */}
+        {/* Cinematic Hero with yellow doors motif and quick booking widget (CMS Editable) */}
         <Hero
           onQuickReserve={handleQuickReserve}
           onExploreMenu={scrollToMenu}
+          content={siteContent.hero}
         />
 
-        {/* Heritage & Varanasi Sanctuaries Story */}
-        <StorySection />
+        {/* Heritage & Varanasi Sanctuaries Story (CMS Editable) */}
+        <StorySection content={siteContent.story} />
 
         {/* Integrated Multi-Cuisine Menu Display (with live editable dishes) */}
         <MenuSection
@@ -398,23 +434,35 @@ export default function App() {
           initialDate={bookingPrefill.date}
           initialGuests={bookingPrefill.guests}
           onNewReservation={(res) => setReservations((prev) => [res, ...prev])}
+          branches={branches}
         />
 
         {/* High-Resolution Curated Photo Gallery with Lightbox (live editable) */}
         <GallerySection photos={galleryPhotos} />
+
+        {/* Behind The Doors in Motion - Video & Reel Cinema (CMS Editable) */}
+        <VideoSection videos={siteContent.videos} />
 
         {/* Dynamic Reviews Section with Moderation Workflow (live editable) */}
         <ReviewsSection
           externalReviews={reviews}
           onUpdateExternalReviews={(updater) => setReviews(updater)}
         />
+
+        {/* Frequently Asked Questions Accordion (CMS Editable) */}
+        <FaqSection
+          faqs={siteContent.faqs}
+          onOpenReservation={scrollToReservation}
+        />
       </main>
 
-      {/* Clean Editorial Footer with Admin Entry */}
+      {/* Clean Editorial Footer with Admin Entry & CMS Social Links */}
       <Footer
         onOpenBranches={() => setIsBranchesModalOpen(true)}
         onOpenReservation={scrollToReservation}
         onOpenAdmin={() => setIsAdminOpen(true)}
+        socialLinks={siteContent.socialLinks}
+        branches={branches}
       />
 
       {/* Slide-out Order-To-Table & Takeaway Tray */}
@@ -432,13 +480,22 @@ export default function App() {
         isOpen={isBranchesModalOpen}
         onClose={() => setIsBranchesModalOpen(false)}
         onSelectBranchForBooking={handleBranchSelectedForBooking}
+        branches={branches}
       />
 
       {/* Real-Time Speed & Responsiveness Audit Badge */}
       <SpeedAuditBadge />
 
       {/* Mobile Sticky Bottom Nav (<15% mobile viewport cap) */}
-      <MobileBottomNav onOpenReservation={scrollToReservation} />
+      <MobileBottomNav
+        onOpenReservation={scrollToReservation}
+        onOpenCart={() => setIsCartOpen(true)}
+        cartCount={cartCount}
+        activeSection={activeSection}
+      />
+
+      {/* Floating Back to Top Button with Circular Scroll Progress */}
+      <BackToTopButton />
 
       {/* FULLSCREEN ADMIN PANEL WITH LEFT-SIDEBAR FEATURES */}
       <AdminPanel
@@ -456,6 +513,8 @@ export default function App() {
         onUpdateBranches={setBranches}
         orders={orders}
         onUpdateOrders={setOrders}
+        siteContent={siteContent}
+        onUpdateSiteContent={setSiteContent}
         onResetToDefaults={handleResetToDefaults}
       />
     </div>

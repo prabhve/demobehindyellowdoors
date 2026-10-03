@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Star, CheckCircle, MessageSquare, ThumbsUp, ShieldCheck, Plus, X, AlertCircle } from 'lucide-react';
 import { INITIAL_REVIEWS, MENU_ITEMS } from '../data/restaurantData';
 import { Review } from '../types';
+import { ScrollReveal } from './ScrollReveal';
 
 interface ReviewsSectionProps {
   externalReviews?: Review[];
@@ -161,57 +162,60 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
     <section id="reviews" className="py-20 bg-stone-50 border-t border-stone-200/80 scroll-mt-14">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-800 mb-2">
-              <span>Authentic Diner Voices</span>
-              <span aria-hidden="true">·</span>
-              <span>Varanasi Foodies</span>
-              <span aria-hidden="true">·</span>
-              <span>4.8 Overall Score</span>
+        <ScrollReveal animation="fade-up" duration={600}>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-800 mb-2">
+                <span>Authentic Diner Voices</span>
+                <span aria-hidden="true">·</span>
+                <span>Varanasi Foodies</span>
+                <span aria-hidden="true">·</span>
+                <span>4.8 Overall Score</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-display font-semibold text-stone-900 tracking-tight">
+                What diners say about us.
+              </h2>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-display font-semibold text-stone-900 tracking-tight">
-              What diners say about us.
-            </h2>
-          </div>
 
-          <div className="mt-4 md:mt-0 flex items-center gap-3">
-            {/* Moderator Switch */}
-            <button
-              onClick={() => setIsModeratorMode(!isModeratorMode)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
-                isModeratorMode
-                  ? 'bg-amber-100 border-amber-300 text-amber-900 font-semibold'
-                  : 'bg-white border-stone-200 text-stone-600 hover:text-stone-900'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-              <span>
-                {isModeratorMode ? 'Moderation Mode (Active)' : 'Moderator Queue'}
-              </span>
-              {pendingReviews.length > 0 && (
-                <span className="bg-amber-500 text-stone-950 font-bold px-1.5 py-0.2 rounded-full text-[10px]">
-                  {pendingReviews.length}
+            <div className="mt-4 md:mt-0 flex items-center gap-3">
+              {/* Moderator Switch */}
+              <button
+                onClick={() => setIsModeratorMode(!isModeratorMode)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
+                  isModeratorMode
+                    ? 'bg-amber-100 border-amber-300 text-amber-900 font-semibold'
+                    : 'bg-white border-stone-200 text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+                <span>
+                  {isModeratorMode ? 'Moderation Mode (Active)' : 'Moderator Queue'}
                 </span>
-              )}
-            </button>
+                {pendingReviews.length > 0 && (
+                  <span className="bg-amber-500 text-stone-950 font-bold px-1.5 py-0.2 rounded-full text-[10px]">
+                    {pendingReviews.length}
+                  </span>
+                )}
+              </button>
 
-            <button
-              onClick={() => {
-                setIsSubmitModalOpen(true);
-                setSubmitSuccessMsg('');
-                setFormError('');
-              }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-stone-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors cursor-pointer shadow-xs"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Write a Review</span>
-            </button>
+              <button
+                onClick={() => {
+                  setIsSubmitModalOpen(true);
+                  setSubmitSuccessMsg('');
+                  setFormError('');
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-stone-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors cursor-pointer shadow-xs"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Write a Review</span>
+              </button>
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Rating Breakdown & Highlights Box */}
-        <div className="bg-white rounded-2xl border border-stone-200 p-6 sm:p-8 mb-10 shadow-xs">
+        <ScrollReveal animation="fade-up" delay={100} duration={600}>
+          <div className="bg-white rounded-2xl border border-stone-200 p-6 sm:p-8 mb-10 shadow-xs">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
             {/* Left Score Block */}
             <div className="md:col-span-4 flex flex-col items-center justify-center text-center p-4 border-b md:border-b-0 md:border-r border-stone-100">
@@ -266,6 +270,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
             </div>
           </div>
         </div>
+      </ScrollReveal>
 
         {/* Moderation Queue Banner if active */}
         {isModeratorMode && (
@@ -320,134 +325,143 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
         )}
 
         {/* Filter Controls */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6">
-          <button
-            onClick={() => setActiveFilter('all')}
-            className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-              activeFilter === 'all'
-                ? 'bg-stone-900 text-amber-400 font-semibold'
-                : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
-            }`}
-          >
-            All Reviews
-          </button>
-          <button
-            onClick={() => setActiveFilter('5star')}
-            className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-              activeFilter === '5star'
-                ? 'bg-stone-900 text-amber-400 font-semibold'
-                : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
-            }`}
-          >
-            5-Star Reviews
-          </button>
-          <button
-            onClick={() => setActiveFilter('verified')}
-            className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-              activeFilter === 'verified'
-                ? 'bg-stone-900 text-amber-400 font-semibold'
-                : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
-            }`}
-          >
-            Verified Diners
-          </button>
-          <button
-            onClick={() => setActiveFilter('sigra')}
-            className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-              activeFilter === 'sigra'
-                ? 'bg-stone-900 text-amber-400 font-semibold'
-                : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
-            }`}
-          >
-            Sigra Branch
-          </button>
-          <button
-            onClick={() => setActiveFilter('bhojuveer')}
-            className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-              activeFilter === 'bhojuveer'
-                ? 'bg-stone-900 text-amber-400 font-semibold'
-                : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
-            }`}
-          >
-            Bhojuveer Branch
-          </button>
-        </div>
+        <ScrollReveal animation="fade-up" delay={150} duration={500}>
+          <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6">
+            <button
+              onClick={() => setActiveFilter('all')}
+              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                activeFilter === 'all'
+                  ? 'bg-stone-900 text-amber-400 font-semibold'
+                  : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
+              }`}
+            >
+              All Reviews
+            </button>
+            <button
+              onClick={() => setActiveFilter('5star')}
+              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                activeFilter === '5star'
+                  ? 'bg-stone-900 text-amber-400 font-semibold'
+                  : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
+              }`}
+            >
+              5-Star Reviews
+            </button>
+            <button
+              onClick={() => setActiveFilter('verified')}
+              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                activeFilter === 'verified'
+                  ? 'bg-stone-900 text-amber-400 font-semibold'
+                  : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
+              }`}
+            >
+              Verified Diners
+            </button>
+            <button
+              onClick={() => setActiveFilter('sigra')}
+              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                activeFilter === 'sigra'
+                  ? 'bg-stone-900 text-amber-400 font-semibold'
+                  : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
+              }`}
+            >
+              Sigra Branch
+            </button>
+            <button
+              onClick={() => setActiveFilter('bhojuveer')}
+              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                activeFilter === 'bhojuveer'
+                  ? 'bg-stone-900 text-amber-400 font-semibold'
+                  : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
+              }`}
+            >
+              Bhojuveer Branch
+            </button>
+          </div>
+        </ScrollReveal>
 
         {/* Reviews Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredReviews.map((rev) => (
-            <div
+          {filteredReviews.map((rev, index) => (
+            <ScrollReveal
               key={rev.id}
-              className="bg-white rounded-xl border border-stone-200 p-5 shadow-2xs hover:shadow-sm transition-shadow flex flex-col justify-between"
+              animation="fade-up"
+              delay={Math.min((index % 6) * 60, 300)}
+              duration={500}
+              className="h-full"
             >
-              <div>
-                {/* Author Info */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-amber-400 text-stone-950 font-bold text-sm flex items-center justify-center font-display">
-                      {rev.avatarLetter}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-xs text-stone-900 leading-tight">
-                        {rev.authorName}
-                      </h4>
-                      {/* Zero-pill metadata */}
-                      <div className="flex items-center gap-1.5 text-[11px] text-stone-400">
-                        <span className="capitalize">{rev.branch}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{rev.date}</span>
+              <div
+                className="bg-white rounded-xl border border-stone-200 p-5 shadow-2xs hover:shadow-sm transition-shadow flex flex-col justify-between h-full"
+              >
+                <div>
+                  {/* Author Info */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-amber-400 text-stone-950 font-bold text-sm flex items-center justify-center font-display">
+                        {rev.avatarLetter}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-xs text-stone-900 leading-tight">
+                          {rev.authorName}
+                        </h4>
+                        {/* Zero-pill metadata */}
+                        <div className="flex items-center gap-1.5 text-[11px] text-stone-400">
+                          <span className="capitalize">{rev.branch}</span>
+                          <span aria-hidden="true">·</span>
+                          <span>{rev.date}</span>
+                        </div>
                       </div>
                     </div>
+
+                    {rev.verifiedDiner && (
+                      <span className="text-[11px] text-emerald-700 flex items-center gap-1 font-medium">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>Verified</span>
+                      </span>
+                    )}
                   </div>
 
-                  {rev.verifiedDiner && (
-                    <span className="text-[11px] text-emerald-700 flex items-center gap-1 font-medium">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      <span>Verified</span>
-                    </span>
+                  {/* Rating Stars */}
+                  <div className="flex items-center gap-0.5 mb-2.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-3.5 h-3.5 ${
+                          star <= rev.rating
+                            ? 'text-amber-400 fill-amber-400'
+                            : 'text-stone-200'
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Comment */}
+                  <p className="text-xs text-stone-700 leading-relaxed mb-4">
+                    &ldquo;{rev.comment}&rdquo;
+                  </p>
+
+                  {/* Favorite Dishes - Zero Pill Rule (unboxed text) */}
+                  {rev.likedDishes && rev.likedDishes.length > 0 && (
+                    <div className="text-[11px] text-amber-800 mb-4 bg-amber-50/60 p-2 rounded-lg border border-amber-100">
+                      <span className="font-semibold text-amber-950">Recommended: </span>
+                      {rev.likedDishes.join(', ')}
+                    </div>
                   )}
                 </div>
 
-                {/* Rating Stars */}
-                <div className="flex items-center gap-0.5 mb-2.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`w-3.5 h-3.5 ${
-                        star <= rev.rating
-                          ? 'text-amber-400 fill-amber-400'
-                          : 'text-stone-200'
-                      }`}
-                    />
-                  ))}
+                {/* Bottom Helpful button */}
+                <div className="pt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
+                  <button
+                    onClick={() => handleHelpful(rev.id)}
+                    className="flex items-center gap-1.5 hover:text-stone-900 transition-colors cursor-pointer"
+                  >
+                    <ThumbsUp className="w-3.5 h-3.5" />
+                    <span>Helpful ({rev.helpfulCount})</span>
+                  </button>
+                  <span className="text-stone-400">Behind Yellow Doors Guest</span>
                 </div>
-
-                {/* Comment */}
-                <p className="text-xs text-stone-700 leading-relaxed mb-4">
-                  &ldquo;{rev.comment}&rdquo;
-                </p>
-
-                {/* Favorite Dishes - Zero Pill Rule (unboxed text) */}
-                {rev.likedDishes && rev.likedDishes.length > 0 && (
-                  <div className="text-[11px] text-amber-800 mb-4 bg-amber-50/60 p-2 rounded-lg border border-amber-100">
-                    <span className="font-semibold text-amber-950">Recommended: </span>
-                    {rev.likedDishes.join(', ')}
-                  </div>
-                )}
               </div>
-
-              {/* Bottom Helpful button */}
-              <div className="pt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
-                <button
-                  onClick={() => handleHelpful(rev.id)}
-                  className="flex items-center gap-1.5 hover:text-stone-900 transition-colors cursor-pointer"
-                >
-                  <ThumbsUp className="w-3.5 h-3.5" />
-                  <span>Helpful ({rev.helpfulCount})</span>
-                </button>
-                <span className="text-stone-400">Behind Yellow Doors Guest</span>
-              </div>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -542,7 +556,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                     placeholder="e.g. Ananya Roy"
                     value={authorName}
                     onChange={(e) => setAuthorName(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-base sm:text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     required
                   />
                 </div>
@@ -555,7 +569,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                   <select
                     value={branchVisited}
                     onChange={(e) => setBranchVisited(e.target.value as 'sigra' | 'bhojuveer')}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-base sm:text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                   >
                     <option value="sigra">Sigra Branch (Chittupura)</option>
                     <option value="bhojuveer">Bhojuveer Branch (Sikraul)</option>
@@ -598,7 +612,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                     placeholder="Tell us about the flavors, service, ambiance, or special memories..."
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-base sm:text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     required
                   />
                 </div>

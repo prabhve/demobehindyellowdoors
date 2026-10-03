@@ -1,18 +1,30 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Clock, ArrowUp, Instagram, Facebook, ShieldCheck, Lock } from 'lucide-react';
-import { BRANCHES } from '../data/restaurantData';
+import { BRANCHES, DEFAULT_SITE_CONTENT } from '../data/restaurantData';
 import { BydLogo } from './BydLogo';
+import { BranchInfo, SiteContent } from '../types';
 
 interface FooterProps {
   onOpenBranches: () => void;
   onOpenReservation: () => void;
   onOpenAdmin: () => void;
+  socialLinks?: SiteContent['socialLinks'];
+  branches?: BranchInfo[];
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenBranches, onOpenReservation, onOpenAdmin }) => {
+export const Footer: React.FC<FooterProps> = ({
+  onOpenBranches,
+  onOpenReservation,
+  onOpenAdmin,
+  socialLinks = DEFAULT_SITE_CONTENT.socialLinks,
+  branches = BRANCHES,
+}) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const sigraBranch = branches.find((b) => b.id === 'sigra') || branches[0] || BRANCHES[0];
+  const bhojuveerBranch = branches.find((b) => b.id === 'bhojuveer') || branches[1] || BRANCHES[1];
 
   return (
     <footer className="bg-stone-950 text-stone-300 pt-16 pb-20 md:pb-12 border-t border-stone-800">
@@ -27,11 +39,12 @@ export const Footer: React.FC<FooterProps> = ({ onOpenBranches, onOpenReservatio
               </span>
             </a>
             <p className="text-xs text-stone-400 leading-relaxed max-w-sm">
-              &ldquo;Making Banaras spicier, happier and deliciously yellow.&rdquo; Varanasi’s landmark multi-cuisine diner and artisanal cafe. Handcrafted Neapolitan sourdough pizzas, charcoal tandoori kebabs, slow-brewed coffee, and memories crafted in warm golden light.
+              {socialLinks.brandBio ||
+                '“Making Banaras spicier, happier and deliciously yellow.” Varanasi’s landmark multi-cuisine diner and artisanal cafe. Handcrafted Neapolitan sourdough pizzas, charcoal tandoori kebabs, slow-brewed coffee, and memories crafted in warm golden light.'}
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="https://instagram.com"
+                href={socialLinks.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-amber-400 flex items-center justify-center transition-colors"
@@ -40,7 +53,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenBranches, onOpenReservatio
                 <Instagram className="w-4 h-4" />
               </a>
               <a
-                href="https://facebook.com"
+                href={socialLinks.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-amber-400 flex items-center justify-center transition-colors"
@@ -48,30 +61,45 @@ export const Footer: React.FC<FooterProps> = ({ onOpenBranches, onOpenReservatio
               >
                 <Facebook className="w-4 h-4" />
               </a>
+              <a
+                href={`mailto:${socialLinks.email}`}
+                className="w-8 h-8 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-amber-400 flex items-center justify-center transition-colors"
+                aria-label="Email BYD"
+              >
+                <Mail className="w-4 h-4" />
+              </a>
             </div>
+            {socialLinks.phone && (
+              <div className="pt-1 text-xs text-stone-400">
+                <span className="text-[10px] uppercase tracking-wider text-stone-500 block">Central Helpline</span>
+                <a href={`tel:${socialLinks.phone}`} className="text-amber-400 hover:text-amber-300 font-mono font-semibold text-xs">
+                  {socialLinks.phone}
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Col 2: Sigra Outlet */}
           <div className="lg:col-span-3 space-y-3">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-              Sigra Flagship
+              {sigraBranch.name}
             </h4>
             <div className="space-y-2 text-xs text-stone-400">
               <p className="leading-snug text-stone-300">
-                {BRANCHES[0].address}
+                {sigraBranch.address}
               </p>
-              <p className="text-stone-500">{BRANCHES[0].landmark}</p>
+              <p className="text-stone-500">{sigraBranch.landmark}</p>
               <div className="pt-1">
                 <a
-                  href={`tel:${BRANCHES[0].phone}`}
+                  href={`tel:${sigraBranch.phone}`}
                   className="hover:text-amber-400 font-mono text-stone-300 block"
                 >
-                  {BRANCHES[0].phone}
+                  {sigraBranch.phone}
                 </a>
               </div>
               <p className="text-stone-500 flex items-center gap-1.5 pt-1">
                 <Clock className="w-3.5 h-3.5 text-stone-400" />
-                <span>11:30 AM – 11:00 PM</span>
+                <span>{sigraBranch.timings}</span>
               </p>
             </div>
           </div>
@@ -79,24 +107,24 @@ export const Footer: React.FC<FooterProps> = ({ onOpenBranches, onOpenReservatio
           {/* Col 3: Bhojuveer Outlet */}
           <div className="lg:col-span-3 space-y-3">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-              Bhojuveer Cafe Lounge
+              {bhojuveerBranch.name}
             </h4>
             <div className="space-y-2 text-xs text-stone-400">
               <p className="leading-snug text-stone-300">
-                {BRANCHES[1].address}
+                {bhojuveerBranch.address}
               </p>
-              <p className="text-stone-500">{BRANCHES[1].landmark}</p>
+              <p className="text-stone-500">{bhojuveerBranch.landmark}</p>
               <div className="pt-1">
                 <a
-                  href={`tel:${BRANCHES[1].phone}`}
+                  href={`tel:${bhojuveerBranch.phone}`}
                   className="hover:text-amber-400 font-mono text-stone-300 block"
                 >
-                  {BRANCHES[1].phone}
+                  {bhojuveerBranch.phone}
                 </a>
               </div>
               <p className="text-stone-500 flex items-center gap-1.5 pt-1">
                 <Clock className="w-3.5 h-3.5 text-stone-400" />
-                <span>11:30 AM – 11:00 PM</span>
+                <span>{bhojuveerBranch.timings}</span>
               </p>
             </div>
           </div>
@@ -150,7 +178,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenBranches, onOpenReservatio
 
         {/* Bottom Bar: Quiet Copyright, Staff Portal & Back to Top */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400 gap-4">
-          <p>© {new Date().getFullYear()} Behind Yellow Doors Diner (BYD Diner). All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {socialLinks.copyrightText || 'Behind Yellow Doors Diner (BYD Diner). All rights reserved.'}</p>
           <div className="flex items-center gap-4">
             <button
               onClick={onOpenAdmin}

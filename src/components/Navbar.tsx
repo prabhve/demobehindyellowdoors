@@ -31,9 +31,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navLinks = [
     { name: 'Menu', href: '#menu' },
     { name: 'Reservations', href: '#reservations' },
-    { name: 'Photo Gallery', href: '#gallery' },
+    { name: 'Gallery', href: '#gallery' },
+    { name: 'Cinema Reels', href: '#videos' },
     { name: 'Reviews', href: '#reviews' },
     { name: 'Our Story', href: '#story' },
+    { name: 'FAQs', href: '#faq' },
   ];
 
   return (
@@ -58,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </a>
 
           {/* Zone 2: 4-6 clean text navigation links */}
-          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-stone-600">
+          <nav className="hidden xl:flex items-center gap-6 text-sm font-medium text-stone-600">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href.substring(1);
               return (
@@ -84,6 +86,36 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <MapPin className="w-3.5 h-3.5 text-amber-600" />
               <span>Sigra & Bhojuveer</span>
+            </button>
+          </nav>
+
+          {/* Medium screen navigation (compact) */}
+          <nav className="hidden md:flex xl:hidden items-center gap-4 text-xs font-medium text-stone-600">
+            {navLinks.slice(0, 5).map((link) => {
+              const isActive = activeSection === link.href.substring(1);
+              return (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className={`relative py-1 transition-colors whitespace-nowrap ${
+                    isActive
+                      ? 'text-stone-950 font-semibold'
+                      : 'hover:text-stone-950'
+                  }`}
+                >
+                  {link.name}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 rounded-full" />
+                  )}
+                </a>
+              );
+            })}
+            <button
+              onClick={onOpenBranches}
+              className="flex items-center gap-1 text-stone-600 hover:text-stone-950 transition-colors whitespace-nowrap cursor-pointer"
+            >
+              <MapPin className="w-3 h-3 text-amber-600" />
+              <span>Sanctuaries</span>
             </button>
           </nav>
 

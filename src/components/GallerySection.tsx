@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, X, Maximize2, MapPin, Camera } from 'lucide-
 import { GALLERY_PHOTOS } from '../data/restaurantData';
 import { GalleryPhoto } from '../types';
 import { SafeImage } from './SafeImage';
+import { ScrollReveal } from './ScrollReveal';
 
 interface GallerySectionProps {
   photos?: GalleryPhoto[];
@@ -50,100 +51,109 @@ export const GallerySection: React.FC<GallerySectionProps> = ({ photos = GALLERY
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-400 mb-2">
-              <Camera className="w-3.5 h-3.5" />
-              <span>Behind The Lens</span>
-              <span aria-hidden="true">·</span>
-              <span>High-Resolution Photo Gallery</span>
+        <ScrollReveal animation="fade-up" duration={600}>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-400 mb-2">
+                <Camera className="w-3.5 h-3.5" />
+                <span>Behind The Lens</span>
+                <span aria-hidden="true">·</span>
+                <span>High-Resolution Photo Gallery</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-display font-semibold tracking-tight text-white">
+                Moments behind the yellow doors.
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-400 mt-2 max-w-xl">
+                An intimate visual glimpse into our artisanal ovens, welcoming bistro spaces, and lively diner celebrations.
+              </p>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-display font-semibold tracking-tight text-white">
-              Moments behind the yellow doors.
-            </h2>
-            <p className="text-xs sm:text-sm text-stone-400 mt-2 max-w-xl">
-              An intimate visual glimpse into our artisanal ovens, welcoming bistro spaces, and lively diner celebrations.
-            </p>
-          </div>
 
-          {/* Category Filter Tabs */}
-          <div className="mt-6 md:mt-0 flex items-center gap-1.5 p-1 bg-stone-800/80 rounded-xl border border-stone-700/60 overflow-x-auto">
-            <button
-              onClick={() => setActiveCategory('all')}
-              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                activeCategory === 'all'
-                  ? 'bg-amber-400 text-stone-950 font-bold'
-                  : 'text-stone-300 hover:text-white'
-              }`}
-            >
-              All Moments
-            </button>
-            <button
-              onClick={() => setActiveCategory('food')}
-              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                activeCategory === 'food'
-                  ? 'bg-amber-400 text-stone-950 font-bold'
-                  : 'text-stone-300 hover:text-white'
-              }`}
-            >
-              Our Food
-            </button>
-            <button
-              onClick={() => setActiveCategory('ambiance')}
-              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                activeCategory === 'ambiance'
-                  ? 'bg-amber-400 text-stone-950 font-bold'
-                  : 'text-stone-300 hover:text-white'
-              }`}
-            >
-              Our Ambiance
-            </button>
-            <button
-              onClick={() => setActiveCategory('moments')}
-              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                activeCategory === 'moments'
-                  ? 'bg-amber-400 text-stone-950 font-bold'
-                  : 'text-stone-300 hover:text-white'
-              }`}
-            >
-              Customer Moments
-            </button>
+            {/* Category Filter Tabs */}
+            <div className="mt-6 md:mt-0 flex items-center gap-1.5 p-1 bg-stone-800/80 rounded-xl border border-stone-700/60 overflow-x-auto">
+              <button
+                onClick={() => setActiveCategory('all')}
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                  activeCategory === 'all'
+                    ? 'bg-amber-400 text-stone-950 font-bold'
+                    : 'text-stone-300 hover:text-white'
+                }`}
+              >
+                All Moments
+              </button>
+              <button
+                onClick={() => setActiveCategory('food')}
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                  activeCategory === 'food'
+                    ? 'bg-amber-400 text-stone-950 font-bold'
+                    : 'text-stone-300 hover:text-white'
+                }`}
+              >
+                Our Food
+              </button>
+              <button
+                onClick={() => setActiveCategory('ambiance')}
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                  activeCategory === 'ambiance'
+                    ? 'bg-amber-400 text-stone-950 font-bold'
+                    : 'text-stone-300 hover:text-white'
+                }`}
+              >
+                Our Ambiance
+              </button>
+              <button
+                onClick={() => setActiveCategory('moments')}
+                className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                  activeCategory === 'moments'
+                    ? 'bg-amber-400 text-stone-950 font-bold'
+                    : 'text-stone-300 hover:text-white'
+                }`}
+              >
+                Customer Moments
+              </button>
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Gallery Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPhotos.map((photo, index) => (
-            <div
+            <ScrollReveal
               key={photo.id}
-              onClick={() => setLightboxIndex(index)}
-              className="group relative rounded-xl overflow-hidden bg-stone-800 border border-stone-800 hover:border-amber-400/50 shadow-md cursor-pointer transition-all duration-300 aspect-4/3"
+              animation="fade-up"
+              delay={Math.min((index % 6) * 70, 350)}
+              duration={550}
+              className="h-full"
             >
-              <SafeImage
-                src={photo.imageUrl}
-                alt={photo.title}
-                fallbackTitle={photo.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
+              <div
+                onClick={() => setLightboxIndex(index)}
+                className="group relative rounded-xl overflow-hidden bg-stone-800 border border-stone-800 hover:border-amber-400/50 shadow-md cursor-pointer transition-all duration-300 aspect-4/3 h-full"
+              >
+                <SafeImage
+                  src={photo.imageUrl}
+                  alt={photo.title}
+                  fallbackTitle={photo.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
 
-              {/* Measured contrast scrim */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-85 group-hover:opacity-95 transition-opacity flex flex-col justify-end p-5">
-                <div className="flex items-center gap-1.5 text-amber-400 text-[11px] font-mono mb-1">
-                  <MapPin className="w-3 h-3" />
-                  <span>{photo.location}</span>
-                </div>
-                <h3 className="text-base font-bold font-display text-white mb-1 group-hover:text-amber-300 transition-colors">
-                  {photo.title}
-                </h3>
-                <p className="text-xs text-stone-300 leading-snug line-clamp-2">
-                  {photo.caption}
-                </p>
+                {/* Measured contrast scrim */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-85 group-hover:opacity-95 transition-opacity flex flex-col justify-end p-5">
+                  <div className="flex items-center gap-1.5 text-amber-400 text-[11px] font-mono mb-1">
+                    <MapPin className="w-3 h-3" />
+                    <span>{photo.location}</span>
+                  </div>
+                  <h3 className="text-base font-bold font-display text-white mb-1 group-hover:text-amber-300 transition-colors">
+                    {photo.title}
+                  </h3>
+                  <p className="text-xs text-stone-300 leading-snug line-clamp-2">
+                    {photo.caption}
+                  </p>
 
-                <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-stone-900/70 backdrop-blur-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white">
-                  <Maximize2 className="w-4 h-4" />
+                  <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-stone-900/70 backdrop-blur-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white">
+                    <Maximize2 className="w-4 h-4" />
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>

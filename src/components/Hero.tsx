@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { Calendar, Users, MapPin, ArrowRight, Clock, Star, Sparkles } from 'lucide-react';
-import { BRANCHES } from '../data/restaurantData';
+import { Calendar, Users, MapPin, ArrowRight, Clock, Star, Sparkles, Play } from 'lucide-react';
+import { SiteContent } from '../types';
 import { BydLogo } from './BydLogo';
+import { DEFAULT_SITE_CONTENT } from '../data/restaurantData';
 
 interface HeroProps {
   onQuickReserve: (branch: 'sigra' | 'bhojuveer', date: string, guests: number) => void;
   onExploreMenu: () => void;
+  content?: SiteContent['hero'];
 }
 
-export const Hero: React.FC<HeroProps> = ({ onQuickReserve, onExploreMenu }) => {
+export const Hero: React.FC<HeroProps> = ({
+  onQuickReserve,
+  onExploreMenu,
+  content = DEFAULT_SITE_CONTENT.hero,
+}) => {
   const [selectedBranch, setSelectedBranch] = useState<'sigra' | 'bhojuveer'>('sigra');
   const [selectedGuests, setSelectedGuests] = useState<number>(2);
   const [selectedDate, setSelectedDate] = useState<string>(
@@ -34,25 +40,19 @@ export const Hero: React.FC<HeroProps> = ({ onQuickReserve, onExploreMenu }) => 
           <div className="lg:col-span-7 flex flex-col justify-center">
             {/* Clean unboxed editorial kicker */}
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-800 mb-4">
-              <span>Behind Yellow Doors</span>
-              <span aria-hidden="true">·</span>
-              <span>Varanasi, India</span>
-              <span aria-hidden="true">·</span>
-              <span>Continental, Italian & Global Flavors</span>
+              <span>{content.kicker}</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-semibold tracking-tight text-stone-950 leading-[1.12] mb-6 text-balance">
-              Where unforgettable conversations begin{' '}
+              {content.headlinePart1}{' '}
               <span className="relative inline-block text-amber-600 italic font-normal">
-                behind yellow doors.
+                {content.headlineHighlight}
                 <span className="absolute bottom-1.5 left-0 w-full h-1.5 bg-amber-300/50 -z-10 rounded-xs" />
               </span>
             </h1>
 
             <p className="text-base sm:text-lg text-stone-600 leading-relaxed max-w-2xl mb-8">
-              Step into Varanasi’s most beloved boutique diner. From crisp wood-fired Neapolitan pizzas
-              and handmade Aglio Olio to creamy Malai Tikkas and decadent molten freakshakes,
-              crafted with slow passion across our Sigra and Bhojuveer sanctuaries.
+              {content.subtitle}
             </p>
 
             {/* Quick Interactive Reservation Bar */}
@@ -78,7 +78,7 @@ export const Hero: React.FC<HeroProps> = ({ onQuickReserve, onExploreMenu }) => 
                     id="hero-branch"
                     value={selectedBranch}
                     onChange={(e) => setSelectedBranch(e.target.value as 'sigra' | 'bhojuveer')}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-lg py-2 px-2.5 text-xs font-medium text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg py-2.5 px-3 text-base sm:text-xs font-medium text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
                   >
                     <option value="sigra">Sigra (Chittupura)</option>
                     <option value="bhojuveer">Bhojuveer (Sikraul)</option>
@@ -97,7 +97,7 @@ export const Hero: React.FC<HeroProps> = ({ onQuickReserve, onExploreMenu }) => 
                     value={selectedDate}
                     min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-lg py-2 px-2.5 text-xs font-medium text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg py-2.5 px-3 text-base sm:text-xs font-medium text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
                   />
                 </div>
 
@@ -111,7 +111,7 @@ export const Hero: React.FC<HeroProps> = ({ onQuickReserve, onExploreMenu }) => 
                     id="hero-guests"
                     value={selectedGuests}
                     onChange={(e) => setSelectedGuests(Number(e.target.value))}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-lg py-2 px-2.5 text-xs font-medium text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg py-2.5 px-3 text-base sm:text-xs font-medium text-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
                   >
                     <option value="1">1 Person (Solo diner)</option>
                     <option value="2">2 Guests (Couple / Pair)</option>
@@ -145,54 +145,66 @@ export const Hero: React.FC<HeroProps> = ({ onQuickReserve, onExploreMenu }) => 
             <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-stone-600">
               <div className="flex items-center gap-1 font-semibold text-stone-900">
                 <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <span>4.8 / 5.0 Rating</span>
+                <span>{content.ratingScore}</span>
               </div>
               <span aria-hidden="true" className="text-stone-300">·</span>
-              <span>Over 640+ Verified Reviews</span>
+              <span>{content.reviewCountText}</span>
               <span aria-hidden="true" className="text-stone-300">·</span>
               <span className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5 text-stone-400" />
-                Open Today: 11:30 AM – 11:00 PM
+                {content.todayHoursText}
               </span>
             </div>
           </div>
 
-          {/* Right Column: Visual Composition with Yellow Door Motif */}
+          {/* Right Column: Visual Composition with Yellow Door Motif (Supports Image or Video) */}
           <div className="lg:col-span-5 relative">
             <div className="relative mx-auto max-w-md lg:max-w-none">
               {/* Decorative Frame */}
               <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-stone-900 border-4 border-amber-400/90 aspect-4/3 sm:aspect-5/4">
-                <img
-                  src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80"
-                  alt="Behind Yellow Doors Diner Ambiance and Entrance"
-                  loading="eager"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                />
+                {content.mediaType === 'video' ? (
+                  <video
+                    src={content.mediaUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <img
+                    src={content.mediaUrl}
+                    alt="Behind Yellow Doors Diner Ambience"
+                    loading="eager"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                )}
+
                 {/* Measured Scrim for Media Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-6 text-white">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-6 text-white pointer-events-none">
                   <div className="flex items-center gap-2 mb-1.5 text-amber-300 text-xs font-semibold tracking-wider uppercase">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>The Signature Atmosphere</span>
                   </div>
                   <h2 className="text-xl sm:text-2xl font-display font-semibold mb-1">
-                    Warm light. Acoustic warmth. Exceptional food.
+                    {content.atmosphereTitle || 'Warm light. Acoustic warmth. Exceptional food.'}
                   </h2>
                   <p className="text-xs text-stone-300 leading-relaxed">
-                    Designed for family dinners, cozy romantic dates, and vibrant friendly reunions.
+                    {content.atmosphereSubtitle || 'Designed for family dinners, cozy romantic dates, and vibrant friendly reunions.'}
                   </p>
                 </div>
               </div>
 
               {/* Floating Mini Experience Card */}
-              <div className="absolute -bottom-6 -left-6 bg-white p-3.5 rounded-xl shadow-lg border border-stone-200/80 hidden sm:flex items-center gap-3.5 max-w-xs">
+              <div className="mt-4 sm:mt-0 sm:absolute sm:-bottom-6 sm:-left-6 bg-white p-3.5 rounded-xl shadow-lg border border-stone-200/80 flex items-center gap-3.5 max-w-sm">
                 <div className="w-12 h-14 rounded-lg bg-amber-50 border border-amber-200/80 flex items-center justify-center shrink-0">
                   <BydLogo variant="mark" size="sm" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-stone-900">2 Outlets in Varanasi</h4>
+                  <h4 className="text-xs font-bold text-stone-900">{content.badgeTitle}</h4>
                   <p className="text-[11px] text-stone-500 leading-snug">
-                    Sigra (Opp. Stadium) & Bhojuveer (Near Circuit House)
+                    {content.badgeSubtitle}
                   </p>
                 </div>
               </div>

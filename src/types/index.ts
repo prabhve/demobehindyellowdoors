@@ -21,12 +21,12 @@ export interface MenuItem {
   description: string;
   ingredients?: string[];
   spiceLevel?: 0 | 1 | 2 | 3;
-  branchAvailability?: ('sigra' | 'bhojuveer')[];
+  branchAvailability?: ('sigra' | 'bhojuveer' | string)[];
   image: string;
 }
 
 export interface BranchInfo {
-  id: 'sigra' | 'bhojuveer';
+  id: 'sigra' | 'bhojuveer' | string;
   name: string;
   tagline: string;
   address: string;
@@ -42,14 +42,14 @@ export interface BranchInfo {
 
 export interface Reservation {
   id: string;
-  branch: 'sigra' | 'bhojuveer';
+  branch: 'sigra' | 'bhojuveer' | string;
   fullName: string;
   phone: string;
   email: string;
   date: string;
   timeSlot: string;
   guests: number;
-  seatingArea: 'indoor_booth' | 'yellow_door_terrace' | 'family_lounge';
+  seatingArea: 'indoor_booth' | 'yellow_door_terrace' | 'family_lounge' | string;
   specialOccasion?: string;
   specialRequests?: string;
   status: 'confirmed' | 'pending' | 'cancelled';
@@ -61,7 +61,7 @@ export interface Review {
   authorName: string;
   rating: number; // 1 to 5
   date: string;
-  branch: 'sigra' | 'bhojuveer';
+  branch: 'sigra' | 'bhojuveer' | string;
   comment: string;
   likedDishes?: string[];
   status: 'published' | 'pending_moderation' | 'rejected';
@@ -100,4 +100,73 @@ export interface KitchenOrder {
   status: 'received' | 'preparing' | 'served' | 'completed' | 'cancelled';
   createdAt: string;
 }
+
+export interface DinerVideo {
+  id: string;
+  title: string;
+  description: string;
+  category: 'culinary' | 'ambiance' | 'stories';
+  videoUrl: string; // Direct mp4/webm or YouTube/Vimeo embed
+  thumbnailUrl: string;
+  duration?: string;
+}
+
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  category: 'reservations' | 'food' | 'locations' | 'events';
+}
+
+export interface SiteContent {
+  announcement: {
+    enabled: boolean;
+    badge: string;
+    text: string;
+    linkText: string;
+    linkUrl: string;
+  };
+  hero: {
+    kicker: string;
+    headlinePart1: string;
+    headlineHighlight: string;
+    subtitle: string;
+    mediaType: 'image' | 'video';
+    mediaUrl: string;
+    atmosphereTitle?: string;
+    atmosphereSubtitle?: string;
+    badgeTitle: string;
+    badgeSubtitle: string;
+    ratingScore: string;
+    reviewCountText: string;
+    todayHoursText: string;
+  };
+  story: {
+    kicker: string;
+    headline: string;
+    paragraph: string;
+    cardTitle?: string;
+    cardSubtitle?: string;
+    feature1Title: string;
+    feature1Desc: string;
+    feature2Title: string;
+    feature2Desc: string;
+    quoteText: string;
+    quoteAuthor: string;
+    badgeNumber: string;
+    badgeLabel: string;
+    mediaUrl: string;
+  };
+  socialLinks: {
+    instagram: string;
+    facebook: string;
+    email: string;
+    phone?: string;
+    brandBio?: string;
+    copyrightText: string;
+  };
+  faqs: FaqItem[];
+  videos: DinerVideo[];
+}
+
 

@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, CheckCircle2, MapPin, Sparkles, Phone, Mail, AlertCircle, Share2, Download, Search, X } from 'lucide-react';
 import { BRANCHES } from '../data/restaurantData';
-import { Reservation } from '../types';
+import { BranchInfo, Reservation } from '../types';
 import { BydLogo } from './BydLogo';
+import { ScrollReveal } from './ScrollReveal';
 
 interface ReservationSectionProps {
-  initialBranch?: 'sigra' | 'bhojuveer';
+  initialBranch?: 'sigra' | 'bhojuveer' | string;
   initialDate?: string;
   initialGuests?: number;
   onNewReservation?: (res: Reservation) => void;
+  branches?: BranchInfo[];
 }
 
 export const ReservationSection: React.FC<ReservationSectionProps> = ({
@@ -16,8 +18,9 @@ export const ReservationSection: React.FC<ReservationSectionProps> = ({
   initialDate,
   initialGuests = 2,
   onNewReservation,
+  branches = BRANCHES,
 }) => {
-  const [branch, setBranch] = useState<'sigra' | 'bhojuveer'>(initialBranch);
+  const [branch, setBranch] = useState<'sigra' | 'bhojuveer' | string>(initialBranch);
   const [date, setDate] = useState<string>(
     initialDate || new Date().toISOString().split('T')[0]
   );
@@ -50,7 +53,7 @@ export const ReservationSection: React.FC<ReservationSectionProps> = ({
   const lunchSlots = ['11:30 AM', '12:15 PM', '1:00 PM', '1:45 PM', '2:30 PM', '3:15 PM'];
   const dinnerSlots = ['6:00 PM', '6:45 PM', '7:30 PM', '8:15 PM', '9:00 PM', '9:45 PM', '10:15 PM'];
 
-  const selectedBranchData = BRANCHES.find((b) => b.id === branch) || BRANCHES[0];
+  const selectedBranchData = branches.find((b) => b.id === branch) || branches[0] || BRANCHES[0];
 
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,46 +182,49 @@ export const ReservationSection: React.FC<ReservationSectionProps> = ({
     <section id="reservations" className="py-20 bg-stone-50 border-t border-stone-200/80 scroll-mt-14">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-700 mb-2">
-              <span>Instant Confirmation</span>
-              <span aria-hidden="true">·</span>
-              <span>Reserve a Table</span>
-              <span aria-hidden="true">·</span>
-              <span>Sigra & Bhojuveer</span>
+        <ScrollReveal animation="fade-up" duration={600}>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-700 mb-2">
+                <span>Instant Confirmation</span>
+                <span aria-hidden="true">·</span>
+                <span>Reserve a Table</span>
+                <span aria-hidden="true">·</span>
+                <span>Sigra & Bhojuveer</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-display font-semibold text-stone-900 tracking-tight">
+                A table waits Behind Yellow Doors.
+              </h2>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-display font-semibold text-stone-900 tracking-tight">
-              A table waits Behind Yellow Doors.
-            </h2>
-          </div>
 
-          <div className="mt-4 md:mt-0 flex items-center gap-3">
-            <button
-              onClick={() => {
-                setIsLookupOpen(true);
-                setLookupMessage('');
-              }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 border border-stone-200 rounded-lg transition-colors cursor-pointer"
-            >
-              <Search className="w-3.5 h-3.5 text-stone-500" />
-              <span>Find My Booking</span>
-            </button>
+            <div className="mt-4 md:mt-0 flex items-center gap-3">
+              <button
+                onClick={() => {
+                  setIsLookupOpen(true);
+                  setLookupMessage('');
+                }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-stone-700 bg-white hover:bg-stone-100 border border-stone-200 rounded-lg transition-colors cursor-pointer"
+              >
+                <Search className="w-3.5 h-3.5 text-stone-500" />
+                <span>Find My Booking</span>
+              </button>
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Booking Form Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Main Booking Interface */}
-          <div className="lg:col-span-8 bg-white rounded-2xl shadow-xs border border-stone-200 p-6 sm:p-8">
-            <form onSubmit={handleBookingSubmit} className="space-y-8">
+          <ScrollReveal animation="fade-up" delay={100} duration={650} className="lg:col-span-8">
+            <div className="bg-white rounded-2xl shadow-xs border border-stone-200 p-6 sm:p-8">
+              <form onSubmit={handleBookingSubmit} className="space-y-8">
               {/* Step 1: Branch Picker */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-3">
                   1. Select Diner Outlet
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {BRANCHES.map((b) => {
+                  {branches.map((b) => {
                     const isSelected = branch === b.id;
                     return (
                       <button
@@ -443,7 +449,7 @@ export const ReservationSection: React.FC<ReservationSectionProps> = ({
                       placeholder="Your Full Name *"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-3 text-base sm:text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       required
                     />
                   </div>
@@ -453,7 +459,7 @@ export const ReservationSection: React.FC<ReservationSectionProps> = ({
                       placeholder="Phone Number (10 digits) *"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-3 text-base sm:text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       required
                     />
                   </div>
@@ -463,7 +469,7 @@ export const ReservationSection: React.FC<ReservationSectionProps> = ({
                       placeholder="Email Address (for voucher)"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-lg p-3 text-base sm:text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                 </div>
@@ -474,7 +480,7 @@ export const ReservationSection: React.FC<ReservationSectionProps> = ({
                     placeholder="Dietary preferences or special requests (e.g. Jain food required, need high chair for toddler, corner table...)"
                     value={specialRequests}
                     onChange={(e) => setSpecialRequests(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-lg p-3 text-base sm:text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
               </div>
@@ -508,9 +514,11 @@ export const ReservationSection: React.FC<ReservationSectionProps> = ({
               </div>
             </form>
           </div>
+        </ScrollReveal>
 
-          {/* Right Column: Branch Summary & Diner Assurance */}
-          <div className="lg:col-span-4 space-y-6">
+        {/* Right Column: Branch Summary & Diner Assurance */}
+        <ScrollReveal animation="fade-left" delay={200} duration={650} className="lg:col-span-4">
+          <div className="space-y-6">
             <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-xs">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-800 mb-2">
                 <MapPin className="w-3.5 h-3.5" />
@@ -562,6 +570,7 @@ export const ReservationSection: React.FC<ReservationSectionProps> = ({
               </div>
             </div>
           </div>
+        </ScrollReveal>
         </div>
       </div>
 
